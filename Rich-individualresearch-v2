@@ -1,0 +1,85 @@
+Prior to discussing LASSO Regression, we must first discuss Ridge Regression. Hoerl and
+Kennard (1970) introduced ridge regression as a response to the instability of Ordinary
+Least Squares (OLS) estimation when predictor variables are in a condition known as
+multicollinearity. OLS estimates coefficients by minimizing the residual sum of squares,
+which can produce unstable coefficients when predictors are intercorrelated. What Ridge
+does different than OLS is that it adds an L2 penalty term to the OLS objective function as
+shown below:
+*Insert ridge regression equation*
+The penalty term adds a cost proportional to the squared size of each coefficient. The
+penalty term shrinks them toward zero as λ increases. When λ equals zero, ridge reduces to
+standard OLS. This penalty stabilizes coefficient estimates in the presence of
+multicollinearity by preventing any single coefficient from growing excessively large to
+compensate for correlated predictors. However, a key limitation of ridge is that it retains all
+predictors in the model. The coefficients do not reach zero which makes it less useful when
+the goal is to identify which variables matter most.
+Tibshirani (1996) proposed the LASSO (Least Absolute Shrinkage and Selection Operator)
+which solves that limitation. While ridge uses an L2 penalty (squared coefficients), LASSO
+applies an L1 penalty using absolute values instead:
+*Insert LASSO regression equation*
+The L1 constraint region forms a diamond shape with sharp corners in coefficient space.
+When the optimization contours meet those corners, coefficients are driven to exactly zero.
+LASSO simultaneously shrinks coefficients and performs variable selection. Irrelevant
+predictors are completely excluded. Tibshirani's simulations demonstrated that LASSO
+performs best when there are a moderate number of relevant predictors. This is important
+because our goal with our paper is to see what predictors are most relevant in our dataset.
+There are other methods related to LASSO that are worth mentioning. Hesterberg et al.
+(2008) provides a comprehensive review of Least Angle Regression (LARS), a method
+introduced by Efron et al. (2004) that unified LASSO, ridge, and forward stagewise
+regression. LARS works by incrementally adding variables to the model in the direction
+most correlated with the current residuals. LARS can actually be used to fit LASSO models
+Efron et al. (2004) and is generally pretty quick. While LARS provides insights into how
+penalized regression methods relate to one another, it is not employed in the present study
+as it is not needed. The current analysis prioritizes interpretability and direct variable
+selection.
+
+Before LASSO, Breiman (1995) introduced the nonnegative garrote as an alternative
+approach to that addressed the instability problem with variable selection methods. Rather
+than directly estimating coefficients, the garrote works by applying nonnegative shrinking
+factors to the original OLS estimates, scaling each coefficient toward zero while allowing
+some to reach exactly zero as the constraint tightens. Like ridge, it is relatively stable under
+small data perturbations, but like LASSO, it can eliminate variables entirely. Breiman's
+simulations showed that the nonnegative garrote almost always outperformed subset
+selection in prediction accuracy, and was competitive with ridge unless a large proportion
+of true coefficients were nonnegligible. Yuan and Lin (2007) later extended and formalized
+the method, proving that the nonnegative garrote possesses a property called path
+consistency. Given a reasonable initial estimate, its solution path is guaranteed to contain
+at least one model that correctly identifies which variables truly matter. Importantly, they
+demonstrated that LASSO does not always share this guarantee when predictors are
+intercorrelated.
+LASSO has been tested in social science data numerous times. One example is it’s
+applications in interpreting which familial factors effect father’s well being the most. Ko et
+al. applied demonstration of OLS, ridge, LASSO, and elastic net regression using survey
+data from 277 U.S. fathers. Their findings demonstrated that while all three regularized
+approaches produced similar overall performance. They all did better than OLS by reducing
+overfitting, improving generalizability, and enhancing interpretability. LASSO was especially
+notable for shrinking less influential predictors to exactly zero in this study. Ko et al. found
+that the most relevant predictors (both positive and negative) were father involvement,
+parent-child relationship conflict, coparenting relationships, parental competency, work–
+family conflict, father role identity, and parent-child relationship closeness. Just as Ko et al.
+used LASSO to distinguish the most influential family factors from a broader set of
+correlated variables, the present study uses LASSO to identify which social media
+variables survive the longest under increasing penalty.
+
+References
+Leo Breiman. (1995). Better Subset Regression Using the Nonnegative Garrote.
+Technometrics, 37(4), 373-. https://doi.org/10.2307/1269730
+Yuan, M., & Lin, Y. (2007). On the non-negative garrotte estimator. Journal of the Royal
+Statistical Society Series B: Statistical Methodology, 69(2), 143–161.
+https://doi.org/10.1111/j.1467-9868.2007.00581.x
+Hoerl, Arthur E, and Robert W Kennard. 1970. “Ridge Regression: Biased Estimation for
+Nonorthogonal Problems.” Technometrics 12 (1): 55–67.
+Tibshirani, Robert. 1996. “Regression Shrinkage and Selection via the Lasso.” Journal of the
+Royal Statistical Society: Series B (Methodological) 58 (1): 267–88.
+Hesterberg, T., Choi, N. H., Meier, L., & Fraley, C. (2008). Least angle and l1 penalized
+regression: A review. Statist. Surv, 2(none), 61–93. https://doi.org/10.1214/08-ss035
+Ko, K., Al Doulat, A., & Ku, S. (2026). Ridge, LASSO, and elastic net regression: Fathers’
+psychological well-being in familial contexts. Journal of Social and Personal Relationships,
+43(6), 1643–1668. https://doi.org/10.1177/02654075251412474
+Efron, B., Hastie, T., Johnstone, I., & Tibshirani, R. (2004). Least Angle Regression. The
+Annals of Statistics, 32(2), 407–451. https://doi.org/10.1214/009053604000000067
+Leo Breiman. (1995). Better Subset Regression Using the Nonnegative Garrote.
+Technometrics, 37(4), 373-. https://doi.org/10.2307/1269730
+Yuan, M., & Lin, Y. (2007). On the non-negative garrotte estimator. Journal of the Royal
+Statistical Society Series B: Statistical Methodology, 69(2), 143–161.
+https://doi.org/10.1111/j.1467-9868.2007.00581.x
