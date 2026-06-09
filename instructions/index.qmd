@@ -1,7 +1,7 @@
 ---
-title: "Writing a great story for data science projects - Summer 2026 "
+title: "Lasso Regression on Cellphone Use Addiction"
 subtitle: "This is a Report Template Quarto"
-author: "Student Name (Advisor: Dr. Cohen)"
+author: "Richard Odgers, Melissa Bolen, Jillian Mouser, Jonathan De La Torra (Advisor: Dr. Cohen)"
 date: '`r Sys.Date()`'
 format:
   html:
@@ -117,7 +117,7 @@ library(dslabs)
 ```
 
 ```{python}
-import pandas as pd
+#import pandas as pd
 ```
 
 ```{r, warning=FALSE, echo=TRUE}
