@@ -1,7 +1,7 @@
 ---
 title: "Lasso Regression on Cellphone Use Addiction "
 subtitle: "This is a Report Template Quarto"
-author: "Richard Odgers, Melissa Bolen, Jillian Mouser, Jonathan De La Torra (Advisor: Dr. Cohen)"
+author: "Richard Odgers, Melissa Bolen, Jillian Mouser, Jonathan De La Torre (Advisor: Dr. Cohen)"
 date: '`r Sys.Date()`'
 format:
   html:
@@ -114,10 +114,6 @@ library(knitr)
 library(ggthemes)
 library(ggrepel)
 library(dslabs)
-```
-
-```{python}
-import pandas as pd
 ```
 
 ```{r, warning=FALSE, echo=TRUE}
