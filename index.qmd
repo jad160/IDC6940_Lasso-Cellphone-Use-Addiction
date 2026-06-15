@@ -34,39 +34,65 @@ Nice report! I am adding this to show updates from RStudio.
 
 ## Introduction
 
-The introduction should:
+In today's ever-growing digital era, what began as a tool of convenience,
+smartphones and devices have become a vital piece of our daily life. While
+these items enable instant communication across the globe, growing usage has
+evolved into an increasing psychological and social crisis: smartphone
+addiction. Characterized by the compulsive need to check notifications and
+apps, withdrawal symptoms, and severe interference with daily life,
+smartphone dependency shows an increasing link to rising rates of anxiety,
+sleep deprivation, and diminished academic performance among young adults
+[@lin2014]. Identifying the precise behavioral, social, and psychological
+drivers of this addiction is critical for developing effective interventions.
+Available data tracking screen time, app usage, and psychological metrics
+frequently contain dozens of interconnected variables. Traditional linear
+regression models struggle under this weight, frequently from overfitting and
+multicollinearity, which obscures the true narrative hidden within the data
+[@james2013].
 
--   Develop a storyline that captures attention and maintains interest.
+In this project, we will explore the Least Absolute Shrinkage and Selection
+Operator (LASSO) method, commonly known as LASSO regression, to isolate the
+most critical predictors of smartphone addiction. Introduced by Robert
+Tibshirani [-@tibshirani1996], LASSO is a powerful statistical method designed
+for both regularization and variable selection. Traditional ordinary least
+squares (OLS) regression treats every available variable as important, which
+often introduces noise and reduces predictive accuracy when dealing with large
+datasets. LASSO solves this problem by adding a mathematical constraint—known
+as an L1 penalty—to the sum of the absolute values of the regression
+coefficients [@tibshirani1996].
 
--   Your audience is your peers
+This L1 penalty performs a unique function: it actively shrinks the
+coefficients of less important variables toward zero [@james2013]. Notably,
+unlike other methods such as Ridge regression, LASSO can force coefficients to
+become exactly zero [@tibshirani1996]. LASSO automatically performs variable
+selection, completely removing irrelevant or redundant features from the final
+model, resulting in a highly interpretable, sparse model consisting only of the
+most statistically significant predictors.
 
--   Clearly state the problem or question you're addressing.
+Our dataset explores problematic smartphone usage from survey data from a
+Computer Adaptive Testing (CAT) item bank. It is comprised of 1,619
+respondents with complete data on six instrument families plus the demographics.
 
-<!-- -->
+Here we will apply LASSO regression to a comprehensive smartphone addiction
+dataset to break down which specific behaviors and demographics truly drive the
+dependencies. Smartphone datasets are particularly noisy, with variables like
+social media screen time, daily notification counts, and self-reported anxiety
+scores often overlapping and distorting traditional models. By implementing
+LASSO, we can mathematically weed out any statistical noise, isolating the
+leading factors [@james2013]. Ideally, this approach will aid us in answering a
+crucial question: with the countless digital metrics tracked today, which
+factors truly lead to smartphone addictions? Our findings aim to provide a
+streamlined, data-driven framework that peers and clinicians alike can use to
+understand and combat digital dependency.
 
--   Introduce why it is relevant needs.
-
--   Provide an overview of your approach.
-
-Example of writing including citing references:
-
-*This is an introduction to ..... regression, which is a non-parametric
-estimator that estimates the conditional expectation of two variables
-which is random. The goal of a kernel regression is to discover the
-non-linear relationship between two random variables. To discover the
-non-linear relationship, kernel estimator or kernel smoothing is the
-main method to estimate the curve for non-parametric statistics. In
-kernel estimator, weight function is known as kernel function
-[@efr2008]. Cite this paper [@bro2014principal]. The GEE [@wang2014].
-The PCA [@daffertshofer2004pca]*. Topology can be used in machine
-learning [@adams2021topology]
-
-For Symbolic Regression [@wang2019symbolic] *This is my work and I want
-to add more work...*
-
-Cite new paper [@su2012linear]
-
-Classification of Knee OA was studied here [@guida2021knee]
+| Abbreviation | Scale |
+|--------------|-------|
+| NMP | Nomophobia |
+| SAPS | Smartphone Addiction Proneness |
+| SPAI | Smartphone Addiction Inventory |
+| MPAS | Mobile Phone Addiction Scale |
+| MPATS | Mobile Phone Addiction Tendency Scale |
+| SAS | Smartphone Addiction Scale (SAS_C / SAS_CA items) |
 
 ## Methods
 
