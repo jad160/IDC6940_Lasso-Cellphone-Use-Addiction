@@ -1,0 +1,190 @@
+---
+title: "Problematic Mobile Phone Use — Data Visualizations"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    theme: cosmo
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r setup}
+library(tidyverse)
+library(ggplot2)
+library(patchwork)
+
+dat <- read_csv("DATA_Problematic Mobile Phone Use CAT.csv")
+
+# Compute scale totals
+dat$NMP_total   <- rowSums(dat[, paste0("NMP_",   1:16)])
+dat$SAPS_total  <- rowSums(dat[, paste0("SAPS_",  1:10)])
+dat$SPAI_total  <- rowSums(dat[, paste0("SPAI_",  1:20)])
+dat$MPAS_total  <- rowSums(dat[, paste0("MPAS_",  1:11)])
+dat$MPATS_total <- rowSums(dat[, paste0("MPATS",  1:16)])
+dat$SAS_total   <- rowSums(dat[, c(paste0("SAS_C", 1:11), paste0("SAS_CA", 1:14))])
+
+scale_totals <- dat %>%
+  select(NMP_total, SAPS_total, SPAI_total, MPAS_total, MPATS_total, SAS_total)
+
+theme_set(
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 11, color = "grey40"),
+    axis.title    = element_text(size = 11),
+    panel.grid.minor = element_blank()
+  )
+)
+```
+
+## Plot 1 — Distribution of SPAI Total (Outcome Variable)
+
+SPAI total is our primary outcome: the sum of 20 items measuring smartphone addiction symptom severity (range 20–80).
+
+```{r spai-dist}
+ggplot(dat, aes(x = SPAI_total)) +
+  geom_histogram(binwidth = 3, fill = "#4C72B0", color = "white", alpha = 0.85) +
+  geom_vline(xintercept = mean(dat$SPAI_total), linetype = "dashed",
+             color = "#C44E52", linewidth = 0.9) +
+  annotate("text",
+           x     = mean(dat$SPAI_total) + 1.5,
+           y     = Inf, vjust = 1.5, hjust = 0,
+           label = paste0("Mean = ", round(mean(dat$SPAI_total), 1)),
+           color = "#C44E52", size = 3.8) +
+  labs(
+    title    = "Distribution of SPAI Total Score",
+    subtitle = paste0("n = ", nrow(dat), " complete cases"),
+    x        = "SPAI Total (20–80)",
+    y        = "Count"
+  )
+```
+
+---
+
+## Plot 2 — Scale Totals Side-by-Side (Box Plots)
+
+These box plots show how scores are distributed across all six scales (each rescaled to 0–100 % of its maximum for fair comparison).
+
+```{r boxplots}
+scale_max <- c(
+  NMP   = 16 * 5,
+  SAPS  = 10 * 5,
+  SPAI  = 20 * 4,
+  MPAS  = 11 * 5,
+  MPATS = 16 * 5,
+  SAS   = 25 * 6   # 11 C-items (1-6) + 14 CA-items (1-6) → max = 11*6 + 14*6 = 150
+)
+
+long_scales <- dat %>%
+  select(NMP_total, SAPS_total, SPAI_total, MPAS_total, MPATS_total, SAS_total) %>%
+  pivot_longer(everything(),
+               names_to  = "Scale",
+               values_to = "Score") %>%
+  mutate(
+    Scale = str_remove(Scale, "_total"),
+    Pct   = case_when(
+      Scale == "NMP"   ~ Score / scale_max["NMP"]   * 100,
+      Scale == "SAPS"  ~ Score / scale_max["SAPS"]  * 100,
+      Scale == "SPAI"  ~ Score / scale_max["SPAI"]  * 100,
+      Scale == "MPAS"  ~ Score / scale_max["MPAS"]  * 100,
+      Scale == "MPATS" ~ Score / scale_max["MPATS"] * 100,
+      Scale == "SAS"   ~ Score / scale_max["SAS"]   * 100
+    ),
+    Scale = factor(Scale, levels = c("NMP","SAPS","SPAI","MPAS","MPATS","SAS"))
+  )
+
+ggplot(long_scales, aes(x = Scale, y = Pct, fill = Scale)) +
+  geom_boxplot(alpha = 0.75, outlier.size = 0.6, outlier.alpha = 0.4) +
+  scale_fill_brewer(palette = "Set2", guide = "none") +
+  labs(
+    title    = "Score Distributions Across All Six Scales",
+    subtitle = "Scores expressed as % of each scale's maximum for comparability",
+    x        = NULL,
+    y        = "Score (% of maximum)"
+  )
+```
+
+---
+
+## Plot 3 — Correlation of Predictor Scales with SPAI Total
+
+How strongly does each of the five predictor scales correlate with SPAI total?
+
+```{r correlations}
+corr_df <- dat %>%
+  summarise(
+    NMP   = cor(NMP_total,   SPAI_total),
+    SAPS  = cor(SAPS_total,  SPAI_total),
+    MPAS  = cor(MPAS_total,  SPAI_total),
+    MPATS = cor(MPATS_total, SPAI_total),
+    SAS   = cor(SAS_total,   SPAI_total)
+  ) %>%
+  pivot_longer(everything(), names_to = "Scale", values_to = "r") %>%
+  mutate(Scale = fct_reorder(Scale, r))
+
+ggplot(corr_df, aes(x = Scale, y = r, fill = r)) +
+  geom_col(width = 0.6, alpha = 0.9) +
+  geom_text(aes(label = round(r, 2)),
+            hjust = -0.15, size = 4, fontface = "bold") +
+  scale_fill_gradient(low = "#9ecae1", high = "#08519c", guide = "none") +
+  scale_y_continuous(limits = c(0, 1), expand = expansion(mult = c(0, 0.12))) +
+  coord_flip() +
+  labs(
+    title    = "Pearson Correlations with SPAI Total",
+    subtitle = "Higher r = stronger linear relationship with addiction severity",
+    x        = NULL,
+    y        = "Pearson r"
+  )
+```
+
+---
+
+## Plot 4 — Scatter: SAPS vs SPAI Total (Top Predictor)
+
+SAPS (Smartphone Addiction Proneness Scale) is the strongest individual predictor. This scatter shows that relationship directly, with a smoothed trend line.
+
+```{r scatter-saps}
+ggplot(dat, aes(x = SAPS_total, y = SPAI_total)) +
+  geom_point(alpha = 0.25, size = 1.2, color = "#4C72B0") +
+  geom_smooth(method = "lm", se = TRUE, color = "#C44E52",
+              fill = "#f4a7a9", linewidth = 1.1) +
+  annotate("text",
+           x     = max(dat$SAPS_total) * 0.05,
+           y     = max(dat$SPAI_total) * 0.96,
+           hjust = 0,
+           label = paste0("r = ", round(cor(dat$SAPS_total, dat$SPAI_total), 2)),
+           size  = 4.5, fontface = "bold", color = "#C44E52") +
+  labs(
+    title    = "SAPS Total vs SPAI Total",
+    subtitle = "Each point = one participant; shaded band = 95% CI",
+    x        = "SAPS Total (Addiction Proneness)",
+    y        = "SPAI Total (Addiction Severity)"
+  )
+```
+
+---
+
+## Plot 5 — Age Distribution by Grade
+
+A quick demographic check: how does age vary across grade levels in this sample?
+
+```{r age-by-grade}
+dat_grade <- dat %>%
+  mutate(Grade = factor(grade,
+                        levels = sort(unique(grade)),
+                        labels = paste("Grade", sort(unique(grade)))))
+
+ggplot(dat_grade, aes(x = age, fill = Grade)) +
+  geom_histogram(binwidth = 1, color = "white", alpha = 0.85) +
+  facet_wrap(~Grade, ncol = 3, scales = "free_y") +
+  scale_fill_brewer(palette = "Paired", guide = "none") +
+  labs(
+    title    = "Age Distribution by Grade Level",
+    subtitle = "Free y-axis per panel; x-axis is age in years",
+    x        = "Age (years)",
+    y        = "Count"
+  )
+```
