@@ -1,0 +1,469 @@
+---
+title: "Descriptive Statistics & Visualizations"
+subtitle: "Problematic Mobile Phone Use CAT Data"
+author: "Jonathan De La Torre"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    fig-width: 8
+    fig-height: 5
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r setup}
+#| label: setup
+#| include: false
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+
+# data/ next to this .qmd, or ../data/ if the .qmd lives in a subfolder (e.g. scripts/).
+data_path <- function(fname) {
+  doc_dir <- dirname(knitr::current_input())
+  candidates <- c(
+    file.path(doc_dir, "data", fname),
+    file.path(doc_dir, "..", "data", fname)
+  )
+  hit <- candidates[file.exists(candidates)][1]
+  if (is.na(hit)) {
+    stop("Cannot find data/", fname, " — expected data/ beside this .qmd or in ../data/")
+  }
+  normalizePath(hit)
+}
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(knitr)
+library(scales)
+library(purrr)
+library(gridExtra)
+
+scale_defs <- tibble(
+  Scale = c("NMP", "SAPS", "SPAI", "MPAS", "MPATS", "SAS_C", "SAS_CA"),
+  Label = c(
+    "Nomophobia (NMP-C)",
+    "Smartphone Addiction Proneness (SAPS)",
+    "Smartphone Addiction Inventory (SPAI)",
+    "Mobile Phone Addiction Scale (MPAS)",
+    "Mobile Phone Addiction Tendency Scale (MPATS)",
+    "Smartphone Addiction Scale — College (SAS-C)",
+    "Smartphone Addiction Scale — Adults (SAS-CA)"
+  ),
+  Items = c(16, 10, 20, 11, 16, 11, 14),
+  Likert = c("1–7", "1–4", "1–4", "1–5", "1–5", "1–5", "1–5"),
+  Item_prefix = c("NMP_", "SAPS_", "SPAI_", "MPAS_", "MPATS", "SAS_C", "SAS_CA")
+)
+
+gender_labels <- c("1" = "Male", "2" = "Female")
+grade_labels <- c(
+  "1" = "Freshman", "2" = "Sophomore", "3" = "Junior", "4" = "Senior",
+  "5" = "Master Y1", "6" = "Master Y2", "7" = "Master Y3", "8" = "Doctoral",
+  "11" = "Grade 7", "12" = "Grade 8", "13" = "Grade 9", "14" = "Grade 10",
+  "15" = "Grade 11", "16" = "Grade 12"
+)
+
+scale_item_cols <- function(dat, prefix) {
+  if (prefix == "MPATS") {
+    grep("^MPATS", names(dat), value = TRUE)
+  } else {
+    grep(paste0("^", prefix), names(dat), value = TRUE)
+  }
+}
+
+add_scale_totals <- function(dat) {
+  out <- dat
+  for (i in seq_len(nrow(scale_defs))) {
+    cols <- scale_item_cols(dat, scale_defs$Item_prefix[i])
+    out[[paste0(scale_defs$Scale[i], "_total")]] <- rowSums(out[, cols], na.rm = FALSE)
+  }
+  spai_cols <- grep("^SPAI_[0-9]+$", names(dat), value = TRUE)
+  out$SPAI_total <- rowSums(out[, spai_cols], na.rm = FALSE)
+  out$SAS_total <- out$SAS_C_total + out$SAS_CA_total
+  out
+}
+
+desc_table <- function(x) {
+  tibble(
+    N = sum(!is.na(x)),
+    Mean = mean(x, na.rm = TRUE),
+    SD = sd(x, na.rm = TRUE),
+    Min = min(x, na.rm = TRUE),
+    Q1 = quantile(x, 0.25, na.rm = TRUE),
+    Median = median(x, na.rm = TRUE),
+    Q3 = quantile(x, 0.75, na.rm = TRUE),
+    Max = max(x, na.rm = TRUE)
+  )
+}
+```
+
+# Overview
+
+This document summarizes the **Computer Adaptive Testing (CAT)** survey on
+problematic mobile phone use. Instrument definitions follow the project item
+bank (`ITEM BANK_Problematic Mobile Phone CAT.docx`). All tables and figures
+below are computed live from `DATA_Problematic Mobile Phone Use CAT.csv`.
+
+# Instrument reference
+
+From the item bank documentation:
+
+```{r instrument-table}
+#| label: tbl-instruments
+
+kable(scale_defs, align = c("l", "l", "r", "c", "l"))
+```
+
+**Demographics:** gender (1 = Male, 2 = Female), grade (see codebook), age.
+
+**Note:** `SPAI_12` is item 12 of the SPAI inventory (4-point response) and is
+also used as a categorical severity indicator in classification models.
+
+# Data loading & completeness
+
+```{r load-data}
+#| label: load-data
+
+raw <- read.csv(data_path("DATA_Problematic Mobile Phone Use CAT.csv"))
+dat <- raw[complete.cases(raw), ]
+dat <- add_scale_totals(dat)
+dat$gender_lab <- factor(gender_labels[as.character(dat$gender)], levels = unname(gender_labels))
+grade_chr <- as.character(dat$grade)
+dat$grade_lab <- ifelse(
+  grade_chr %in% names(grade_labels),
+  grade_labels[grade_chr],
+  paste("Code", grade_chr)
+)
+dat$grade_lab <- factor(dat$grade_lab)
+
+cat("Raw rows:", nrow(raw), "| Complete cases:", nrow(dat), "\n")
+cat("Variables:", ncol(raw), "\n")
+```
+
+```{r missingness}
+#| label: tbl-missingness
+#| tbl-cap: "Missing values by variable (raw data). Only variables with any missing shown."
+
+miss <- colSums(is.na(raw))
+miss_tbl <- tibble(Variable = names(miss), Missing = as.integer(miss)) %>%
+  filter(Missing > 0) %>%
+  arrange(desc(Missing)) %>%
+  mutate(Pct = percent(Missing / nrow(raw), accuracy = 0.1))
+
+if (nrow(miss_tbl) == 0) {
+  miss_tbl <- tibble(Variable = "(none)", Missing = 0, Pct = "0%")
+}
+
+kable(miss_tbl, align = c("l", "r", "r"))
+```
+
+```{r completeness-plot}
+#| label: fig-completeness
+#| fig-cap: "Share of respondents with complete vs. incomplete records."
+
+comp_df <- tibble(
+  Status = c("Complete", "Incomplete"),
+  N = c(nrow(dat), nrow(raw) - nrow(dat))
+)
+
+ggplot(comp_df, aes(x = Status, y = N, fill = Status)) +
+  geom_col(width = 0.6, show.legend = FALSE) +
+  geom_text(aes(label = N), vjust = -0.4, size = 4) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
+  labs(x = NULL, y = "Respondents", title = "Data completeness") +
+  theme_minimal(base_size = 12)
+```
+
+# Demographics
+
+```{r demo-age}
+#| label: tbl-demo-age
+#| tbl-cap: "Age summary (complete cases)."
+
+kable(desc_table(dat$age) %>% mutate(across(where(is.numeric), ~ round(.x, 2))),
+      col.names = c("N", "Mean", "SD", "Min", "Q1", "Median", "Q3", "Max"))
+```
+
+```{r demo-gender-grade}
+#| label: tbl-demo-gender-grade
+#| tbl-cap: "Gender and grade counts (complete cases)."
+
+demo_tbl <- bind_rows(
+  dat %>% count(gender_lab, name = "N") %>% rename(Category = gender_lab) %>% mutate(Variable = "Gender"),
+  dat %>% count(grade_lab, name = "N") %>% rename(Category = grade_lab) %>% mutate(Variable = "Grade")
+) %>%
+  select(Variable, Category, N) %>%
+  arrange(Variable, desc(N))
+
+kable(demo_tbl, align = c("l", "l", "r"))
+```
+
+```{r fig-demographics}
+#| label: fig-demographics
+#| fig-cap: "Age distribution and demographic breakdown (complete cases)."
+#| fig-width: 10
+#| fig-height: 5
+
+p_age <- ggplot(dat, aes(x = age)) +
+  geom_histogram(bins = 25, fill = "#4C78A8", color = "white") +
+  labs(title = "Age", x = "Years", y = "Count") +
+  theme_minimal(base_size = 11)
+
+gender_df <- dat %>% count(gender_lab, .drop = FALSE)
+p_gender <- ggplot(gender_df, aes(x = gender_lab, y = n, fill = gender_lab)) +
+  geom_col(show.legend = FALSE) +
+  labs(title = "Gender", x = NULL, y = "Count") +
+  theme_minimal(base_size = 11) +
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+
+grade_df <- dat %>% count(grade_lab, .drop = FALSE) %>%
+  mutate(grade_lab = reorder(grade_lab, n))
+p_grade <- ggplot(grade_df, aes(x = grade_lab, y = n, fill = grade_lab)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(title = "Grade / school level", x = NULL, y = "Count") +
+  theme_minimal(base_size = 11)
+
+gridExtra::grid.arrange(p_age, p_gender, p_grade, ncol = 3)
+```
+
+# Scale totals — descriptive statistics
+
+Scale totals are the **sum of item scores** within each instrument (higher =
+more problematic use, per item bank direction).
+
+```{r scale-desc}
+#| label: tbl-scale-desc
+#| tbl-cap: "Descriptive statistics for scale total scores (complete cases)."
+
+total_cols <- c(paste0(scale_defs$Scale, "_total"), "SPAI_total", "SAS_total")
+total_labels <- c(scale_defs$Label, "SPAI total (20 items)", "SAS combined (SAS-C + SAS-CA)")
+
+scale_desc <- map2_dfr(total_cols, total_labels, function(col, lab) {
+  desc_table(dat[[col]]) %>% mutate(Scale = lab)
+}) %>%
+  select(Scale, everything()) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 2)))
+
+kable(scale_desc, align = c("l", rep("r", 8)))
+```
+
+```{r fig-scale-histograms}
+#| label: fig-scale-histograms
+#| fig-cap: "Distributions of scale total scores."
+#| fig-width: 10
+#| fig-height: 12
+
+plot_cols <- c(paste0(scale_defs$Scale, "_total"), "SPAI_total")
+plot_labels <- c(scale_defs$Label, "SPAI total (20 items)")
+
+hist_df <- dat %>%
+  select(all_of(plot_cols)) %>%
+  pivot_longer(everything(), names_to = "scale", values_to = "score") %>%
+  mutate(scale = factor(scale, levels = plot_cols, labels = plot_labels))
+
+ggplot(hist_df, aes(x = score)) +
+  geom_histogram(bins = 25, fill = "#72B7B2", color = "white") +
+  facet_wrap(~ scale, scales = "free", ncol = 2) +
+  labs(x = "Scale total", y = "Respondents", title = "Scale total score distributions") +
+  theme_minimal(base_size = 10) +
+  theme(strip.text = element_text(size = 8))
+```
+
+```{r fig-scale-boxplots}
+#| label: fig-scale-boxplots
+#| fig-cap: "Boxplots of scale totals (complete cases)."
+
+box_df <- dat %>%
+  select(all_of(plot_cols)) %>%
+  pivot_longer(everything(), names_to = "scale", values_to = "score") %>%
+  mutate(scale = factor(scale, levels = plot_cols, labels = plot_labels))
+
+ggplot(box_df, aes(x = scale, y = score, fill = scale)) +
+  geom_boxplot(show.legend = FALSE, outlier.alpha = 0.35) +
+  coord_flip() +
+  labs(x = NULL, y = "Scale total", title = "Scale totals — spread and outliers") +
+  theme_minimal(base_size = 11)
+```
+
+# SPAI item 12 (categorical)
+
+Item 12 measures perceived negative impact on study/work (4-point Likert in the
+item bank).
+
+```{r spai12-table}
+#| label: tbl-spai12
+#| tbl-cap: "SPAI_12 response distribution (complete cases)."
+
+spai12_tbl <- dat %>%
+  count(SPAI_12, name = "N") %>%
+  mutate(Pct = percent(N / sum(N), accuracy = 0.1))
+
+kable(spai12_tbl, col.names = c("SPAI_12 level", "N", "Percent"), align = c("l", "r", "r"))
+```
+
+```{r fig-spai12}
+#| label: fig-spai12
+#| fig-cap: "SPAI_12 category frequencies."
+
+ggplot(spai12_tbl, aes(x = factor(SPAI_12), y = N, fill = factor(SPAI_12))) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = N), vjust = -0.3, size = 3.5) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(x = "SPAI item 12 response", y = "Respondents", title = "SPAI_12 distribution") +
+  theme_minimal(base_size = 12)
+```
+
+# Correlations among scale totals
+
+```{r correlation}
+#| label: tbl-correlation
+#| tbl-cap: "Pearson correlations among scale totals."
+
+corr_cols <- c(paste0(scale_defs$Scale, "_total"), "SPAI_total")
+corr_mat <- cor(dat[, corr_cols], use = "complete.obs")
+corr_df <- as.data.frame(round(corr_mat, 2))
+corr_df <- cbind(Scale = rownames(corr_df), corr_df)
+rownames(corr_df) <- NULL
+
+kable(corr_df, align = c("l", rep("r", ncol(corr_df) - 1)))
+```
+
+```{r fig-correlation}
+#| label: fig-correlation
+#| fig-cap: "Correlation heatmap of scale totals."
+
+corr_long <- as.data.frame(corr_mat) %>%
+  mutate(Scale1 = rownames(.)) %>%
+  pivot_longer(-Scale1, names_to = "Scale2", values_to = "r") %>%
+  mutate(
+    Scale1 = gsub("_total", "", Scale1),
+    Scale2 = gsub("_total", "", Scale2)
+  )
+
+ggplot(corr_long, aes(x = Scale2, y = Scale1, fill = r)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = sprintf("%.2f", r)), size = 2.8, color = "black") +
+  scale_fill_gradient2(low = "#B2182B", mid = "white", high = "#2166AC", midpoint = 0, limits = c(-1, 1)) +
+  labs(x = NULL, y = NULL, fill = "r", title = "Scale total correlations") +
+  theme_minimal(base_size = 11) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+# Item-level means by scale
+
+Average response per item (complete cases), faceted by instrument.
+
+```{r item-means}
+#| label: fig-item-means
+#| fig-cap: "Mean item score within each scale (1 = lowest endorsement per item bank)."
+#| fig-width: 10
+#| fig-height: 14
+
+item_means_list <- lapply(seq_len(nrow(scale_defs)), function(i) {
+  cols <- scale_item_cols(dat, scale_defs$Item_prefix[i])
+  tibble(
+    item = cols,
+    mean_score = colMeans(dat[, cols], na.rm = TRUE),
+    scale = scale_defs$Label[i]
+  )
+})
+item_means_df <- bind_rows(item_means_list) %>%
+  group_by(scale) %>%
+  mutate(item = reorder(item, mean_score)) %>%
+  ungroup()
+
+ggplot(item_means_df, aes(x = mean_score, y = item, fill = mean_score)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ scale, scales = "free_y", ncol = 1) +
+  labs(x = "Mean item score", y = NULL, title = "Average endorsement by item") +
+  theme_minimal(base_size = 9) +
+  theme(strip.text = element_text(size = 8))
+```
+
+# SPAI total by demographics
+
+```{r spai-by-demo}
+#| label: tbl-spai-by-demo
+#| tbl-cap: "SPAI total by gender and grade (mean ± SD)."
+
+spai_gender <- dat %>%
+  group_by(gender_lab) %>%
+  summarise(N = n(), Mean = mean(SPAI_total), SD = sd(SPAI_total), .groups = "drop") %>%
+  mutate(across(c(Mean, SD), ~ round(.x, 2)), Group = "Gender", Level = as.character(gender_lab))
+
+spai_grade <- dat %>%
+  group_by(grade_lab) %>%
+  summarise(N = n(), Mean = mean(SPAI_total), SD = sd(SPAI_total), .groups = "drop") %>%
+  mutate(across(c(Mean, SD), ~ round(.x, 2)), Group = "Grade", Level = as.character(grade_lab))
+
+spai_demo <- bind_rows(
+  spai_gender %>% select(Group, Level, N, Mean, SD),
+  spai_grade %>% select(Group, Level, N, Mean, SD)
+)
+
+kable(spai_demo, align = c("l", "l", "r", "r", "r"))
+```
+
+```{r fig-spai-by-demo}
+#| label: fig-spai-by-demo
+#| fig-cap: "SPAI total by gender and grade."
+#| fig-width: 10
+#| fig-height: 5
+
+p1 <- ggplot(dat, aes(x = gender_lab, y = SPAI_total, fill = gender_lab)) +
+  geom_boxplot(show.legend = FALSE, outlier.alpha = 0.3) +
+  labs(title = "By gender", x = NULL, y = "SPAI total") +
+  theme_minimal(base_size = 11)
+
+grade_order <- dat %>%
+  group_by(grade_lab) %>%
+  summarise(m = mean(SPAI_total), .groups = "drop") %>%
+  arrange(m) %>%
+  pull(grade_lab)
+
+p2 <- ggplot(dat, aes(x = factor(grade_lab, levels = grade_order), y = SPAI_total, fill = grade_lab)) +
+  geom_boxplot(show.legend = FALSE, outlier.alpha = 0.3) +
+  coord_flip() +
+  labs(title = "By grade", x = NULL, y = "SPAI total") +
+  theme_minimal(base_size = 11)
+
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+```
+
+# Age vs. scale totals
+
+```{r fig-age-scatter}
+#| label: fig-age-scatter
+#| fig-cap: "Age versus SPAI total and SAS combined total."
+
+scatter_df <- dat %>%
+  select(age, SPAI_total, SAS_total) %>%
+  pivot_longer(-age, names_to = "outcome", values_to = "score") %>%
+  mutate(outcome = recode(outcome,
+    SPAI_total = "SPAI total",
+    SAS_total = "SAS combined total"
+  ))
+
+ggplot(scatter_df, aes(x = age, y = score)) +
+  geom_point(alpha = 0.25, size = 1.2, color = "#4C78A8") +
+  geom_smooth(method = "lm", se = TRUE, color = "#E45756", linewidth = 0.8) +
+  facet_wrap(~ outcome, scales = "free_y") +
+  labs(x = "Age", y = "Scale total", title = "Age and addiction severity scores") +
+  theme_minimal(base_size = 11)
+```
+
+# Summary
+
+- **`r nrow(raw)`** respondents in the raw file; **`r nrow(dat)`** complete cases
+  used for all summaries above.
+- Seven instrument families plus demographics, documented in the CAT item bank.
+- Scale totals are strongly correlated with one another; SAPS, SPAI, MPAS,
+  MPATS, and SAS tend to move together (see correlation heatmap).
+- Demographic breakdowns and item-level means help locate where respondents
+  endorse problematic phone-use symptoms most strongly.
