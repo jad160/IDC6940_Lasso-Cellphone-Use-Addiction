@@ -1,120 +1,227 @@
 ---
-title: "Present a great story for data science projects"
-subtitle: "This is a Slide Template"
-author: "Students names (Advisor: Dr. Cohen)"
+title: "LASSO Regression on Cellphone Use Addiction"
+subtitle: "IDC6940 Capstone — Problematic Mobile Phone Use"
+author: "Richard Odgers, Melissa Bolen, Jillian Mouser, Jonathan De La Torre (Advisor: Dr. Cohen)"
 date: '`r Sys.Date()`'
 format:
-  revealjs
+  revealjs:
+    theme: simple
+    slide-number: true
+    chalkboard: false
 course: Capstone Projects in Data Science
-bibliography: references.bib # file contains bibtex for references
-#always_allow_html: true # this allows to get PDF with HTML features
+bibliography: references.bib
 self-contained: true
-execute: 
+execute:
   warning: false
   message: false
-editor: 
-  markdown: 
-    wrap: 72
 ---
 
-::: callout-important
-**Remember:** Your goal is to make your audience understand and care
-about your findings. By crafting a compelling story, you can effectively
-communicate the value of your data science project.
+```{r setup}
+#| echo: false
+#| include: false
 
-Carefully read this template since it has instructions and tips to
-writing!
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
-More information about `revealjs`:
-<https://quarto.org/docs/reference/formats/presentations/revealjs.html>
-:::
-
-## Introduction  {.smaller}
-
-This is a test statement in the introduction
-
-
--   Develop a storyline that captures attention and maintains interest.
-
--   Your audience is your peers
-
--   Clearly state the problem or question you're addressing.
-
--   Introduce why it is relevant needs.
-
--   Provide an overview of your approach.
-
-In kernel estimator, weight function is known as kernel function
-[@efr2008]. Cite this paper [@bro2014principal]. The GEE [@wang2014].
-The PCA [@daffertshofer2004pca]\*
-
-## Methods
-
--   Detail the models or algorithms used.
-
--   Justify your choices based on the problem and data.
-
-
-
-## Data Exploration and Visualization
-
--   Describe your data sources and collection process.
-
--   Present initial findings and insights through visualizations.
-
--   Highlight unexpected patterns or anomalies.
-
-## Data Exploration and Visualization {.smaller}
-
-A study was conducted to determine how...
-
-```{r, warning=FALSE, echo=F, message=FALSE}
-# loading packages 
-library(tidyverse)
+library(glmnet)
+library(grpreg)
+library(caret)
+library(dplyr)
 library(knitr)
-library(ggthemes)
-library(ggrepel)
-library(dslabs)
+library(ggplot2)
+
+RANDOM_SEED <- 123
+set.seed(RANDOM_SEED)
+
+assign_group <- function(nm) {
+  if (grepl("^gender", nm)) return("gender")
+  if (grepl("^grade", nm)) return("grade")
+  if (nm == "age") return("age")
+  if (grepl("^NMP_", nm)) return("NMP")
+  if (grepl("^SAPS_", nm)) return("SAPS")
+  if (grepl("^SPAI_", nm)) return("SPAI")
+  if (grepl("^MPAS_", nm)) return("MPAS")
+  if (grepl("^MPATS", nm)) return("MPATS")
+  if (grepl("^SAS_CA", nm)) return("SAS_CA")
+  if (grepl("^SAS_C", nm)) return("SAS_C")
+  "other"
+}
+
+make_reg_mm <- function(dat) {
+  spai_items <- paste0("SPAI_", 1:20)
+  d <- dat[, !names(dat) %in% c(spai_items, "SPAI_12_num", "SPAI_total"), drop = FALSE]
+  d$SPAI_total <- dat$SPAI_total
+  x <- model.matrix(SPAI_total ~ ., data = d)[, -1]
+  list(
+    x = x,
+    y = d$SPAI_total,
+    group = as.numeric(factor(sapply(colnames(x), assign_group)))
+  )
+}
+
+plain_lasso_vars <- function(cv_fit, lambda_label, cols) {
+  raw_coef <- coef(cv_fit, s = lambda_label)
+  if (is.list(raw_coef)) {
+    vars <- unique(unlist(lapply(raw_coef, function(m) {
+      mat <- as.matrix(m)
+      rownames(mat)[mat[, 1] != 0]
+    })))
+  } else {
+    mat <- as.matrix(raw_coef)
+    vars <- rownames(mat)[mat[, 1] != 0]
+  }
+  intersect(setdiff(vars, "(Intercept)"), cols)
+}
+
+group_lasso_vars <- function(cv_fit, lambda_val, cols) {
+  coefs <- coef(cv_fit, lambda = lambda_val)
+  intersect(names(coefs)[coefs != 0 & names(coefs) != "(Intercept)"], cols)
+}
+
+lambda_1se_grp <- function(cv_fit) {
+  i <- which.min(cv_fit$cve)
+  max(cv_fit$lambda[cv_fit$cve <= cv_fit$cve[i] + cv_fit$cvse[i]])
+}
+
+reg_metrics <- function(y_true, y_pred) {
+  ss_res <- sum((y_true - y_pred)^2)
+  ss_tot <- sum((y_true - mean(y_true))^2)
+  list(R2 = 1 - ss_res / ss_tot, RMSE = sqrt(mean((y_true - y_pred)^2)))
+}
+
+dat <- read.csv("data/DATA_Problematic Mobile Phone Use CAT.csv")
+dat <- dat[complete.cases(dat), ]
+dat$gender <- as.factor(dat$gender)
+dat$grade <- as.factor(dat$grade)
+dat$SPAI_total <- rowSums(dat[, paste0("SPAI_", 1:20)])
+dat$SPAI_12 <- as.factor(dat$SPAI_12)
+
+train_index <- createDataPartition(dat$SPAI_12, p = 0.80, list = FALSE)
+mm_reg <- make_reg_mm(dat)
+xtr <- mm_reg$x[train_index, , drop = FALSE]
+xte <- mm_reg$x[-train_index, , drop = FALSE]
+ytr <- mm_reg$y[train_index]
+yte <- mm_reg$y[-train_index]
+
+cv_plain <- cv.glmnet(xtr, ytr, alpha = 1, family = "gaussian", nfolds = 10)
+pred_plain <- as.numeric(predict(cv_plain, xte, s = "lambda.1se"))
+met_plain <- reg_metrics(yte, pred_plain)
+sel_plain <- plain_lasso_vars(cv_plain, "lambda.1se", colnames(mm_reg$x))
+
+cv_grp <- cv.grpreg(xtr, ytr, mm_reg$group, family = "gaussian", nfolds = 10)
+lam_grp <- cv_grp$lambda.min
+pred_grp <- as.numeric(predict(cv_grp, xte, lambda = lam_grp))
+met_grp <- reg_metrics(yte, pred_grp)
+sel_grp <- group_lasso_vars(cv_grp, lam_grp, colnames(mm_reg$x))
+
+gauss_results <- data.frame(
+  Model = c("Plain LASSO | lambda.1se", "Group LASSO | lambda.min"),
+  R2 = round(c(met_plain$R2, met_grp$R2), 3),
+  RMSE = round(c(met_plain$RMSE, met_grp$RMSE), 2),
+  N_selected = c(length(sel_plain), length(sel_grp))
+)
+
+scale_counts <- sel_plain %>%
+  sapply(assign_group) %>%
+  table() %>%
+  as.data.frame(stringsAsFactors = FALSE)
+names(scale_counts) <- c("Scale", "N_items")
+scale_counts <- scale_counts %>%
+  filter(Scale != "other") %>%
+  arrange(desc(N_items))
 ```
 
-```{r, warning=FALSE, echo=F}
-# Load Data
-#kable(head(murders))
+## The Problem
 
-ggplot1 = murders %>% ggplot(mapping = aes(x=population/10^6, y=total)) 
+Smartphone use has shifted from convenience to dependency.
 
-  ggplot1 + geom_point(aes(col=region), size = 4) +
-  geom_text_repel(aes(label=abb)) +
-  scale_x_log10() +
-  scale_y_log10() +
-  geom_smooth(formula = "y~x", method=lm,se = F)+
-  xlab("Populations in millions (log10 scale)") + 
-  ylab("Total number of murders (log10 scale)") +
-  ggtitle("US Gun Murders in 2010") +
-  scale_color_discrete(name = "Region")+
-      theme_bw()
-  
+- Compulsive checking, withdrawal, daily-life interference
+- Links to anxiety, sleep loss, and academic strain [@lin2014]
+- Dozens of overlapping survey variables → multicollinearity [@james2013]
 
+**Question:** Which scales best predict overall addiction severity?
+
+## Our Data
+
+Computer Adaptive Testing (CAT) survey — **1,619** complete cases
+
+| Abbrev. | Scale |
+|---------|-------|
+| NMP | Nomophobia |
+| SAPS | Addiction proneness |
+| SPAI | Addiction inventory (outcome) |
+| MPAS | Mobile phone addiction |
+| MPATS | Addiction tendency |
+| SAS | Smartphone addiction scale |
+
+Plus age, gender, and grade.
+
+## Outcome & Approach
+
+**Outcome:** SPAI total (sum of 20 SPAI items, ~20–80)
+
+**Predictors:** all other scales + demographics — SPAI items excluded (they define the score)
+
+**Method:** LASSO [@tibshirani1996] — shrinks weak coefficients to zero and keeps a sparse, interpretable model [@james2013]
+
+## Two Modeling Dials
+
+| | Category (multinomial) | Number (Gaussian) |
+|---|---|---|
+| **Item-level** (Plain) | Predict SPAI_12 class | Predict SPAI total |
+| **Scale-level** (Group) | Predict SPAI_12 class | Predict SPAI total |
+
+- **Plain LASSO** — selects individual items
+- **Group LASSO** — keeps or drops whole scales
+- **lambda.1se** — simplest model nearly as good as best fit
+
+## SPAI Severity in the Sample
+
+```{r spa-total-hist}
+#| fig-width: 8
+#| fig-height: 4.5
+
+ggplot(dat, aes(x = SPAI_total)) +
+  geom_histogram(bins = 25, fill = "#4C78A8", color = "white") +
+  labs(
+    x = "SPAI total score",
+    y = "Respondents",
+    title = "Distribution of smartphone addiction severity (SPAI total)"
+  ) +
+  theme_minimal(base_size = 18)
 ```
 
-## Modeling and Results
+## Live Results — Gaussian LASSO
 
--   Explain your data preprocessing and cleaning steps.
+Single 80/20 split · test set *n* = `r nrow(mm_reg$x) - length(train_index)`
 
--   Present your key findings in a clear and concise manner.
-
--   Use visuals to support your claims.
-
--   **Tell a story about what the data reveals.**
-
-```{r}
-
+```{r gauss-table}
+kable(gauss_results, align = c("l", "r", "r", "r"))
 ```
 
-## Conclusion
+Other scales explain about **three-quarters** of SPAI-total variation on held-out respondents.
 
--   Summarize your key findings.
+## Selected Scales (Plain LASSO, lambda.1se)
 
--   Discuss the implications of your results.
+```{r scale-bar}
+#| fig-width: 8
+#| fig-height: 4.5
+
+ggplot(scale_counts, aes(x = reorder(Scale, N_items), y = N_items, fill = Scale)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(x = NULL, y = "Selected items", title = "Which instruments matter most?") +
+  theme_minimal(base_size = 18)
+```
+
+**SAPS** and **SAS** dominate · **NMP** (nomophobia) contributes little
+
+## Recommendation & Next Steps
+
+**Recommended model:** Plain LASSO at `lambda.1se` — strong R² with far fewer predictors than group LASSO
+
+- Scales overlap → convergent validity, not causation
+- External validation on a new sample
+- Robustness across seeds/splits
+- Write up why SAPS/SAS track SPAI total
 
 ## References
