@@ -142,7 +142,7 @@ ggplot(corr_df, aes(x = Scale, y = r, fill = r)) +
 
 ---
 
-## Plot 4 — Scatter: SAPS vs SPAI Total (Top Predictor)
+## Plot 4 — Scatter: SAPS vs SPAI Total
 
 SAPS (Smartphone Addiction Proneness Scale) is the strongest individual predictor. This scatter shows that relationship directly, with a smoothed trend line.
 
@@ -167,7 +167,31 @@ ggplot(dat, aes(x = SAPS_total, y = SPAI_total)) +
 
 ---
 
-## Plot 5 — Age Distribution by Grade
+## Plot 5 — Scatter: SAS vs SPAI Total
+
+```{r}
+ggplot(dat, aes(x = SAS_total, y = SPAI_total)) +
+  geom_point(alpha = 0.25, size = 1.2, color = "#4C72B0") +
+  geom_smooth(method = "lm", se = TRUE, color = "#C44E52",
+              fill = "#f4a7a9", linewidth = 1.1) +
+  annotate("text",
+           x     = max(dat$SAPS_total) * 0.05,
+           y     = max(dat$SPAI_total) * 0.96,
+           hjust = 0,
+           label = paste0("r = ", round(cor(dat$SAS_total, dat$SPAI_total), 2)),
+           size  = 4.5, fontface = "bold", color = "#C44E52") +
+  labs(
+    title    = "SAS Total vs SPAI Total",
+    subtitle = "Each point = one participant; shaded band = 95% CI",
+    x        = "SAS Total",
+    y        = "SPAI Total"
+  )
+```
+
+
+---
+
+## Plot 6 — Age Distribution by Grade
 
 A quick demographic check: how does age vary across grade levels in this sample?
 
