@@ -26,6 +26,7 @@ library(glmnet)
 library(grpreg)
 library(caret)
 library(dplyr)
+library(tidyr)
 library(knitr)
 library(ggplot2)
 
@@ -77,11 +78,6 @@ group_lasso_vars <- function(cv_fit, lambda_val, cols) {
   intersect(names(coefs)[coefs != 0 & names(coefs) != "(Intercept)"], cols)
 }
 
-lambda_1se_grp <- function(cv_fit) {
-  i <- which.min(cv_fit$cve)
-  max(cv_fit$lambda[cv_fit$cve <= cv_fit$cve[i] + cv_fit$cvse[i]])
-}
-
 reg_metrics <- function(y_true, y_pred) {
   ss_res <- sum((y_true - y_pred)^2)
   ss_tot <- sum((y_true - mean(y_true))^2)
@@ -94,6 +90,13 @@ dat$gender <- as.factor(dat$gender)
 dat$grade <- as.factor(dat$grade)
 dat$SPAI_total <- rowSums(dat[, paste0("SPAI_", 1:20)])
 dat$SPAI_12 <- as.factor(dat$SPAI_12)
+
+dat$NMP_total   <- rowSums(dat[, paste0("NMP_",   1:16)])
+dat$SAPS_total  <- rowSums(dat[, paste0("SAPS_",  1:10)])
+dat$MPAS_total  <- rowSums(dat[, paste0("MPAS_",  1:11)])
+dat$MPATS_total <- rowSums(dat[, paste0("MPATS",  1:16)])
+dat$SAS_total   <- rowSums(dat[, c(paste0("SAS_C", 1:11),
+                                    paste0("SAS_CA", 1:14))])
 
 train_index <- createDataPartition(dat$SPAI_12, p = 0.80, list = FALSE)
 mm_reg <- make_reg_mm(dat)
@@ -128,6 +131,17 @@ names(scale_counts) <- c("Scale", "N_items")
 scale_counts <- scale_counts %>%
   filter(Scale != "other") %>%
   arrange(desc(N_items))
+
+corr_df <- dat %>%
+  summarise(
+    NMP   = cor(NMP_total,   SPAI_total),
+    SAPS  = cor(SAPS_total,  SPAI_total),
+    MPAS  = cor(MPAS_total,  SPAI_total),
+    MPATS = cor(MPATS_total, SPAI_total),
+    SAS   = cor(SAS_total,   SPAI_total)
+  ) %>%
+  pivot_longer(everything(), names_to = "Scale", values_to = "r") %>%
+  mutate(Scale = reorder(Scale, r))
 ```
 
 ## The Problem
@@ -142,7 +156,7 @@ Smartphone use has shifted from convenience to dependency.
 
 ## Our Data
 
-Computer Adaptive Testing (CAT) survey — **1,619** complete cases
+Computer Adaptive Testing (CAT) survey [@gao2024] — **1,619** complete cases
 
 | Abbrev. | Scale |
 |---------|-------|
@@ -153,15 +167,30 @@ Computer Adaptive Testing (CAT) survey — **1,619** complete cases
 | MPATS | Addiction tendency |
 | SAS | Smartphone addiction scale |
 
-Plus age, gender, and grade.
+Plus age, gender, and grade (mean age ≈ 18.8; 991 F / 628 M).
 
 ## Outcome & Approach
 
-**Outcome:** SPAI total (sum of 20 SPAI items, ~20–80)
+**Outcome:** SPAI total (sum of 20 SPAI items, 20–80; mean ≈ 41.8)
 
 **Predictors:** all other scales + demographics — SPAI items excluded (they define the score)
 
-**Method:** LASSO [@tibshirani1996] — shrinks weak coefficients to zero and keeps a sparse, interpretable model [@james2013]
+**Method:** LASSO [@tibshirani1996] — $L_1$ penalty shrinks weak coefficients to zero [@james2013; @hesterberg2008]
+
+## LASSO in One Equation
+
+$$
+\min_{\boldsymbol{\beta}}
+\left\{
+\sum_{i=1}^{n}
+\left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2
++ \lambda \sum_{j=1}^{p}|\beta_j|
+\right\}
+$$
+
+- $\lambda$ tuned by 10-fold CV (`lambda.min` vs `lambda.1se`)
+- **Plain LASSO** — item-level selection (`glmnet`)
+- **Group LASSO** — whole-scale selection (`grpreg`) [@yuan2006; @huang2024]
 
 ## Two Modeling Dials
 
@@ -170,9 +199,14 @@ Plus age, gender, and grade.
 | **Item-level** (Plain) | Predict SPAI_12 class | Predict SPAI total |
 | **Scale-level** (Group) | Predict SPAI_12 class | Predict SPAI total |
 
-- **Plain LASSO** — selects individual items
-- **Group LASSO** — keeps or drops whole scales
-- **lambda.1se** — simplest model nearly as good as best fit
+12 models total: 8 classification + 4 Gaussian regression
+
+## Exploratory Findings
+
+- **NMP** highest mean endorsement (~69% of max) but **weakest** SPAI correlation
+- **SAS** strongest predictor ($r \approx 0.81$), then SAPS / MPATS (~0.71)
+- All six scales highly intercorrelated → convergent validity + multicollinearity
+- **SPAI item 12** imbalanced (~6% in rarest category)
 
 ## SPAI Severity in the Sample
 
@@ -181,12 +215,30 @@ Plus age, gender, and grade.
 #| fig-height: 4.5
 
 ggplot(dat, aes(x = SPAI_total)) +
-  geom_histogram(bins = 25, fill = "#4C78A8", color = "white") +
+  geom_histogram(binwidth = 3, fill = "#4C72B0", color = "white", alpha = 0.85) +
+  geom_vline(xintercept = mean(dat$SPAI_total), linetype = "dashed",
+             color = "#C44E52", linewidth = 0.9) +
   labs(
     x = "SPAI total score",
     y = "Respondents",
     title = "Distribution of smartphone addiction severity (SPAI total)"
   ) +
+  theme_minimal(base_size = 18)
+```
+
+## Correlations with SPAI Total
+
+```{r corr-bar}
+#| fig-width: 8
+#| fig-height: 4.5
+
+ggplot(corr_df, aes(x = Scale, y = r, fill = r)) +
+  geom_col(width = 0.6, alpha = 0.9) +
+  geom_text(aes(label = round(r, 2)), hjust = -0.15, size = 5, fontface = "bold") +
+  scale_fill_gradient(low = "#9ecae1", high = "#08519c", guide = "none") +
+  scale_y_continuous(limits = c(0, 1), expand = expansion(mult = c(0, 0.12))) +
+  coord_flip() +
+  labs(x = NULL, y = "Pearson r", title = "Non-SPAI scales vs SPAI total") +
   theme_minimal(base_size = 18)
 ```
 
