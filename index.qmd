@@ -83,71 +83,298 @@ understand and combat digital dependency.
 
 ## Methods
 
--   Detail the models or algorithms used.
+We model smartphone addiction severity with penalized linear regression.
+Each respondent contributes item-level responses from six validated
+instrument families (NMP, SAPS, SPAI, MPAS, MPATS, SAS) plus
+demographics. After listwise deletion of incomplete records, $n = 1{,}619$
+complete cases remain. The primary continuous outcome is **SPAI total**,
+the sum of 20 SPAI items (range 20–80) [@lin2014]. SPAI items are
+excluded from the predictor set when predicting SPAI total to avoid
+circularity; we instead ask whether nomophobia, proneness, and related
+scales track overall SPAI severity. A secondary categorical outcome,
+**SPAI item 12**, captures perceived negative impact on study or work on
+a four-point Likert scale.
 
--   Justify your choices based on the problem and data.
+### Ordinary least squares and why LASSO
 
-*The common non-parametric regression model is*
-$Y_i = m(X_i) + \varepsilon_i$*, where* $Y_i$ *can be defined as the sum
-of the regression function value* $m(x)$ *for* $X_i$*. Here* $m(x)$ *is
-unknown and* $\varepsilon_i$ *some errors. With the help of this
-definition, we can create the estimation for local averaging i.e.*
-$m(x)$ *can be estimated with the product of* $Y_i$ *average and* $X_i$
-*is near to* $x$*. In other words, this means that we are discovering
-the line through the data points with the help of surrounding data
-points. The estimation formula is printed below [@R-base]:*
-
-$$
-M_n(x) = \sum_{i=1}^{n} W_n (X_i) Y_i  \tag{1}
-$$$W_n(x)$ *is the sum of weights that belongs to all real numbers.
-Weights are positive numbers and small if* $X_i$ *is far from* $x$*.*
-
-*Another equation:*
+A standard linear model for continuous outcome $y_i$ and predictors
+$\mathbf{x}_i \in \mathbb{R}^p$ is
 
 $$
-y_i = \beta_0 + \beta_1 X_1 +\varepsilon_i
+y_i = \beta_0 + \sum_{j=1}^{p} \beta_j x_{ij} + \varepsilon_i,
+\qquad i = 1,\ldots,n.
+\tag{1}
 $$
+
+Ordinary least squares (OLS) minimizes the residual sum of squares
+$\sum_{i=1}^{n}(y_i - \hat{y}_i)^2$. With dozens of correlated survey
+items, OLS tends to overfit, inflate coefficient variance, and produce
+unstable signs under multicollinearity [@james2013; @mcneish2015].
+Ridge regression adds an $L_2$ penalty that shrinks coefficients but
+rarely sets them exactly to zero [@hoerl1970]. LASSO replaces that
+penalty with an $L_1$ term, enabling simultaneous shrinkage and variable
+selection [@tibshirani1996; @hesterberg2008].
+
+### LASSO objective and tuning
+
+LASSO estimates coefficients by minimizing the penalized least-squares
+objective [@tibshirani1996; @santosa1986]:
+
+$$
+\min_{\boldsymbol{\beta}}
+\left\{
+\sum_{i=1}^{n}
+\left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2
++ \lambda \sum_{j=1}^{p}|\beta_j|
+\right\}.
+\tag{2}
+$$
+
+The tuning parameter $\lambda \geq 0$ controls the bias–variance
+trade-off. When $\lambda = 0$, Equation (2) reduces to OLS; as
+$\lambda$ increases, more coefficients are driven to exactly zero,
+yielding a sparse, interpretable model [@efron2004; @dalalyan2017].
+We select $\lambda$ with 10-fold cross-validation on an 80/20
+train–test split, reporting both **`lambda.min`** (lowest CV error) and
+**`lambda.1se`** (simplest model within one standard error of the minimum)
+[@james2013]. For the main paper result we emphasize plain LASSO at
+`lambda.1se` as a deliberate parsimony choice: it retains nearly the
+same test $R^2$ while selecting far fewer predictors.
+
+Test-set performance for continuous models is summarized by
+
+$$
+R^2 = 1 - \frac{\sum_{i}(y_i - \hat{y}_i)^2}{\sum_{i}(y_i - \bar{y})^2},
+\qquad
+\mathrm{RMSE} = \sqrt{\frac{1}{n}\sum_{i}(y_i - \hat{y}_i)^2}.
+\tag{3}
+$$
+
+### Plain LASSO versus group LASSO
+
+We fit two complementary LASSO variants implemented in **`glmnet`**
+(plain) and **`grpreg`** (group) [@james2013; @huang2024].
+
+**Plain LASSO** (`alpha = 1`, `family = "gaussian"`) performs item-level
+selection: any individual survey item may enter or leave the model.
+**Group LASSO** assigns all items within a scale (e.g., SAPS) to a single
+group and selects entire scales at once [@yuan2006; @huang2024]. Plain
+LASSO answers which specific items matter; group LASSO answers which
+whole instruments matter when scales are treated as coherent units.
+
+For classification of SPAI item 12, we additionally fit multinomial
+LASSO (`family = "multinomial"`) and refit a multinomial log-linear
+model on the selected predictors (post-LASSO) to improve class
+probabilities [@james2013]. Class imbalance in SPAI item 12 is evaluated
+with balanced accuracy and Cohen's $\kappa$ on the held-out test set.
+
+### Justification for this problem and data
+
+Our CAT item bank contains on the order of 100 item-level predictors that
+measure overlapping facets of problematic phone use [@gao2024]. Pearson
+correlations among scale totals exceed $r = 0.64$ for several pairs (see
+Data Exploration), so multicollinearity is expected rather than
+exceptional. LASSO is well suited to high-dimensional, collinear
+psychological survey data because it stabilizes estimation and returns a
+sparse subset of items or scales that best predict addiction severity
+[@mcneish2015; @dalalyan2017]. Comparing plain and group LASSO, alongside
+`lambda.min` and `lambda.1se`, lets us balance predictive accuracy against
+interpretability—an important consideration when communicating results to
+clinicians and educators [@james2013; @huang2024].
 
 ## Analysis and Results
 
 ### Data Exploration and Visualization
 
--   Describe your data sources and collection process.
+Data come from a Computer Adaptive Testing (CAT) item bank on problematic
+mobile phone use [@gao2024]. Respondents completed items from six
+instrument families—nomophobia (NMP), smartphone addiction proneness
+(SAPS), the Smartphone Addiction Inventory (SPAI) [@lin2014], the Mobile
+Phone Addiction Scale (MPAS), the Mobile Phone Addiction Tendency Scale
+(MPATS), and the Smartphone Addiction Scale (SAS-C and SAS-CA)—along with
+demographics (age, gender, grade). The raw file contains
+$n = 1{,}619$ respondents with complete records on all variables; no
+listwise missingness remains after filtering. Scale totals are computed as
+the sum of item scores within each instrument (higher totals indicate more
+problematic use, per the item bank codebook).
 
--   Present initial findings and insights through visualizations.
+The sample is predominantly young adults (mean age $\approx 18.8$ years,
+$SD \approx 2.9$), with more female ($n = 991$) than male ($n = 628$)
+respondents. SPAI total—the primary outcome for regression—has mean
+$\approx 41.8$ ($SD \approx 10.2$) on the 20–80 scale, with a roughly
+symmetric distribution centered below the midpoint. When scale totals are
+rescaled to percentages of each instrument's maximum, **NMP** shows the
+highest average endorsement ($\approx 69\%$ of maximum), whereas SAPS,
+SPAI, MPAS, MPATS, and SAS cluster between 40% and 52%—suggesting that
+fear of disconnection is reported more intensely than other addiction
+symptoms in this cohort.
 
--   Highlight unexpected patterns or anomalies.
+Pearson correlations with SPAI total rank the predictor scales as follows:
+SAS ($r \approx 0.81$), SAPS ($r \approx 0.71$), MPATS ($r \approx 0.71$),
+MPAS ($r \approx 0.65$), and NMP ($r \approx 0.55$). Scatter plots of SAPS
+and SAS against SPAI total show strong linear trends with modest residual
+spread. A correlation heatmap further reveals that all six scale totals
+move together (inter-scale $r$ often exceeds 0.60), confirming substantial
+**convergent validity** among instruments but also highlighting the
+multicollinearity that motivates LASSO regularization.
 
-A study was conducted to determine how...
+Two patterns warrant attention before modeling. First, **SPAI item 12**
+(perceived impact on study/work) is highly imbalanced: levels 1–4 contain
+262, 577, 688, and 92 responses respectively, so the rarest category is
+only $\approx 6\%$ of the sample—classification models must account for
+this skew. Second, although NMP averages highest in percentage terms, it
+correlates **weakest** with SPAI total among the five non-SPAI scales, hinting
+that nomophobia may be partially redundant once proneness (SAPS) and SAS
+symptoms are considered—a pattern consistent with preliminary LASSO results
+where NMP items are often zeroed out. Demographic boxplots show modest SPAI
+differences by gender and grade but no single grade level dominates severity
+scores.
 
-```{r, warning=FALSE, echo=T, message=FALSE}
-# loading packages 
+```{r viz-setup, warning=FALSE, message=FALSE}
 library(tidyverse)
 library(knitr)
-library(ggthemes)
-library(ggrepel)
-library(dslabs)
+library(patchwork)
+
+dat <- read.csv("data/DATA_Problematic Mobile Phone Use CAT.csv")
+dat <- dat[complete.cases(dat), ]
+
+dat$NMP_total   <- rowSums(dat[, paste0("NMP_",   1:16)])
+dat$SAPS_total  <- rowSums(dat[, paste0("SAPS_",  1:10)])
+dat$SPAI_total  <- rowSums(dat[, paste0("SPAI_",  1:20)])
+dat$MPAS_total  <- rowSums(dat[, paste0("MPAS_",  1:11)])
+dat$MPATS_total <- rowSums(dat[, paste0("MPATS",  1:16)])
+dat$SAS_total   <- rowSums(dat[, c(paste0("SAS_C", 1:11),
+                                    paste0("SAS_CA", 1:14))])
+
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(
+      plot.title = element_text(face = "bold"),
+      panel.grid.minor = element_blank()
+    )
+)
 ```
 
-```{r, warning=FALSE, echo=TRUE}
-# Load Data
-kable(head(murders))
-
-ggplot1 = murders %>% ggplot(mapping = aes(x=population/10^6, y=total)) 
-
-  ggplot1 + geom_point(aes(col=region), size = 4) +
-  geom_text_repel(aes(label=abb)) +
-  scale_x_log10() +
-  scale_y_log10() +
-  geom_smooth(formula = "y~x", method=lm,se = F)+
-  xlab("Populations in millions (log10 scale)") + 
-  ylab("Total number of murders (log10 scale)") +
-  ggtitle("US Gun Murders in 2010") +
-  scale_color_discrete(name = "Region")+
-      theme_bw()
-  
-
+```{r fig-spai-dist, fig.cap="Distribution of SPAI total score (primary outcome; n = 1,619 complete cases)."}
+ggplot(dat, aes(x = SPAI_total)) +
+  geom_histogram(binwidth = 3, fill = "#4C72B0", color = "white", alpha = 0.85) +
+  geom_vline(xintercept = mean(dat$SPAI_total), linetype = "dashed",
+             color = "#C44E52", linewidth = 0.9) +
+  annotate("text",
+           x = mean(dat$SPAI_total) + 1.5, y = Inf, vjust = 1.5, hjust = 0,
+           label = paste0("Mean = ", round(mean(dat$SPAI_total), 1)),
+           color = "#C44E52", size = 3.8) +
+  labs(
+    title = "Distribution of SPAI Total Score",
+    x = "SPAI Total (20–80)", y = "Count"
+  )
 ```
+
+```{r fig-scale-boxplots, fig.cap="Scale totals rescaled to percent of each instrument maximum for comparability."}
+scale_max <- c(NMP = 80, SAPS = 50, SPAI = 80, MPAS = 55,
+               MPATS = 80, SAS = 150)
+
+long_scales <- dat %>%
+  select(NMP_total, SAPS_total, SPAI_total, MPAS_total,
+         MPATS_total, SAS_total) %>%
+  pivot_longer(everything(), names_to = "Scale", values_to = "Score") %>%
+  mutate(
+    Scale = str_remove(Scale, "_total"),
+    Pct = Score / scale_max[Scale] * 100,
+    Scale = factor(Scale, levels = names(scale_max))
+  )
+
+ggplot(long_scales, aes(x = Scale, y = Pct, fill = Scale)) +
+  geom_boxplot(alpha = 0.75, outlier.size = 0.6, outlier.alpha = 0.4) +
+  scale_fill_brewer(palette = "Set2", guide = "none") +
+  labs(
+    title = "Score Distributions Across All Six Scales",
+    x = NULL, y = "Score (% of maximum)"
+  )
+```
+
+```{r fig-correlations, fig.cap="Pearson correlations between non-SPAI scale totals and SPAI total."}
+corr_df <- dat %>%
+  summarise(
+    NMP   = cor(NMP_total,   SPAI_total),
+    SAPS  = cor(SAPS_total,  SPAI_total),
+    MPAS  = cor(MPAS_total,  SPAI_total),
+    MPATS = cor(MPATS_total, SPAI_total),
+    SAS   = cor(SAS_total,   SPAI_total)
+  ) %>%
+  pivot_longer(everything(), names_to = "Scale", values_to = "r") %>%
+  mutate(Scale = fct_reorder(Scale, r))
+
+ggplot(corr_df, aes(x = Scale, y = r, fill = r)) +
+  geom_col(width = 0.6, alpha = 0.9) +
+  geom_text(aes(label = round(r, 2)), hjust = -0.15, fontface = "bold") +
+  scale_fill_gradient(low = "#9ecae1", high = "#08519c", guide = "none") +
+  scale_y_continuous(limits = c(0, 1), expand = expansion(mult = c(0, 0.12))) +
+  coord_flip() +
+  labs(title = "Pearson Correlations with SPAI Total", x = NULL, y = "Pearson r")
+```
+
+```{r fig-corr-heatmap, fig.cap="Pearson correlation heatmap among scale totals (complete cases)."}
+corr_cols <- c("NMP_total", "SAPS_total", "SPAI_total", "MPAS_total",
+               "MPATS_total", "SAS_total")
+corr_mat <- cor(dat[, corr_cols], use = "complete.obs")
+
+corr_long <- as.data.frame(corr_mat) %>%
+  mutate(Scale1 = rownames(.)) %>%
+  pivot_longer(-Scale1, names_to = "Scale2", values_to = "r") %>%
+  mutate(
+    Scale1 = gsub("_total", "", Scale1),
+    Scale2 = gsub("_total", "", Scale2)
+  )
+
+ggplot(corr_long, aes(x = Scale2, y = Scale1, fill = r)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = sprintf("%.2f", r)), size = 3, color = "black") +
+  scale_fill_gradient2(low = "#B2182B", mid = "white", high = "#2166AC",
+                       midpoint = 0, limits = c(-1, 1)) +
+  labs(x = NULL, y = NULL, fill = "r",
+       title = "Scale Total Correlations") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r fig-scatter-saps, fig.cap="SAPS total versus SPAI total with OLS trend line and 95% CI band."}
+ggplot(dat, aes(x = SAPS_total, y = SPAI_total)) +
+  geom_point(alpha = 0.25, size = 1.2, color = "#4C72B0") +
+  geom_smooth(method = "lm", se = TRUE, color = "#C44E52",
+              fill = "#f4a7a9", linewidth = 1.1) +
+  annotate("text",
+           x = max(dat$SAPS_total) * 0.05,
+           y = max(dat$SPAI_total) * 0.96, hjust = 0,
+           label = paste0("r = ", round(cor(dat$SAPS_total, dat$SPAI_total), 2)),
+           size = 4.5, fontface = "bold", color = "#C44E52") +
+  labs(
+    title = "SAPS Total vs SPAI Total",
+    x = "SAPS Total (Addiction Proneness)", y = "SPAI Total (Addiction Severity)"
+  )
+```
+
+```{r fig-demographics, fig.cap="Age distribution and demographic breakdown (complete cases).", fig.width=10, fig.height=4}
+gender_labels <- c("1" = "Male", "2" = "Female")
+dat$gender_lab <- factor(gender_labels[as.character(dat$gender)],
+                         levels = unname(gender_labels))
+
+p_age <- ggplot(dat, aes(x = age)) +
+  geom_histogram(bins = 25, fill = "#4C78A8", color = "white") +
+  labs(title = "Age", x = "Years", y = "Count")
+
+p_gender <- dat %>% count(gender_lab) %>%
+  ggplot(aes(x = gender_lab, y = n, fill = gender_lab)) +
+  geom_col(show.legend = FALSE) +
+  labs(title = "Gender", x = NULL, y = "Count")
+
+p_age + p_gender + plot_layout(widths = c(2, 1))
+```
+
+Together, these exploratory plots motivate our modeling strategy: SPAI
+total is suitable as a continuous Gaussian outcome; the strong SAPS and SAS
+relationships suggest they will dominate LASSO selection; and the shared
+variance across scales justifies penalized regression over unregularized OLS
+[@james2013; @gao2024].
 
 ### Modeling and Results
 

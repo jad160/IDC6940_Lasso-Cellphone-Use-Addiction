@@ -3,3 +3,7 @@
 .RData
 .Ruserdata
 scripts/jad160_CellphoneAddiction_Lasso.R
+
+# Microsoft Office lock/temp files
+~$*
+*.tmp
