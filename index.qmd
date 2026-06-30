@@ -211,9 +211,9 @@ symptoms in this cohort.
 
 Pearson correlations with SPAI total rank the predictor scales as follows:
 SAS ($r \approx 0.81$), SAPS ($r \approx 0.71$), MPATS ($r \approx 0.71$),
-MPAS ($r \approx 0.65$), and NMP ($r \approx 0.55$). Scatter plots of SAPS
-and SAS against SPAI total show strong linear trends with modest residual
-spread. A correlation heatmap further reveals that all six scale totals
+MPAS ($r \approx 0.65$), and NMP ($r \approx 0.55$). A scatter plot of SAS
+(the strongest correlate) against SPAI total shows a strong linear trend with
+modest residual spread. A correlation heatmap further reveals that all six scale totals
 move together (inter-scale $r$ often exceeds 0.60), confirming substantial
 **convergent validity** among instruments but also highlighting the
 multicollinearity that motivates LASSO regularization.
@@ -337,19 +337,19 @@ ggplot(corr_long, aes(x = Scale2, y = Scale1, fill = r)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-```{r fig-scatter-saps, fig.cap="SAPS total versus SPAI total with OLS trend line and 95% CI band."}
-ggplot(dat, aes(x = SAPS_total, y = SPAI_total)) +
+```{r fig-scatter-sas, fig.cap="SAS total versus SPAI total with OLS trend line and 95% CI band."}
+ggplot(dat, aes(x = SAS_total, y = SPAI_total)) +
   geom_point(alpha = 0.25, size = 1.2, color = "#4C72B0") +
   geom_smooth(method = "lm", se = TRUE, color = "#C44E52",
               fill = "#f4a7a9", linewidth = 1.1) +
   annotate("text",
-           x = max(dat$SAPS_total) * 0.05,
+           x = max(dat$SAS_total) * 0.05,
            y = max(dat$SPAI_total) * 0.96, hjust = 0,
-           label = paste0("r = ", round(cor(dat$SAPS_total, dat$SPAI_total), 2)),
+           label = paste0("r = ", round(cor(dat$SAS_total, dat$SPAI_total), 2)),
            size = 4.5, fontface = "bold", color = "#C44E52") +
   labs(
-    title = "SAPS Total vs SPAI Total",
-    x = "SAPS Total (Addiction Proneness)", y = "SPAI Total (Addiction Severity)"
+    title = "SAS Total vs SPAI Total",
+    x = "SAS Total (Smartphone Addiction Scale)", y = "SPAI Total (Addiction Severity)"
   )
 ```
 
