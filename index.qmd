@@ -12,143 +12,140 @@ self-contained: true
 execute: 
   warning: false
   message: false
-editor: 
-  markdown: 
-    wrap: 72
+editor: visual
 ---
 
 Slides: [slides.html](slides.html){target="_blank"}
 
 ## Introduction
 
-In today's ever-growing digital era, what began as a tool of convenience,
-smartphones and devices have become a vital piece of our daily life. While
-these items enable instant communication across the globe, growing usage has
-evolved into an increasing psychological and social crisis: smartphone
-addiction. Characterized by the compulsive need to check notifications and
-apps, withdrawal symptoms, and severe interference with daily life,
-smartphone dependency shows an increasing link to rising rates of anxiety,
-sleep deprivation, and diminished academic performance among young adults
-[@lin2014]. Identifying the precise behavioral, social, and psychological
-drivers of this addiction is critical for developing effective interventions.
-Available data tracking screen time, app usage, and psychological metrics
-frequently contain dozens of interconnected variables. Traditional linear
-regression models struggle under this weight, frequently from overfitting and
-multicollinearity, which obscures the true narrative hidden within the data
-[@james2013].
+In today's ever-growing digital era, what began as a tool of
+convenience, smartphones and devices have become a vital piece of our
+daily life. While these items enable instant communication across the
+globe, growing usage has evolved into an increasing psychological and
+social crisis: smartphone addiction. Characterized by the compulsive
+need to check notifications and apps, withdrawal symptoms, and severe
+interference with daily life, smartphone dependency shows an increasing
+link to rising rates of anxiety, sleep deprivation, and diminished
+academic performance among young adults [@lin2014]. Identifying the
+precise behavioral, social, and psychological drivers of this addiction
+is critical for developing effective interventions. Available data
+tracking screen time, app usage, and psychological metrics frequently
+contain dozens of interconnected variables. Traditional linear
+regression models struggle under this weight, frequently from
+overfitting and multicollinearity, which obscures the true narrative
+hidden within the data [@james2013].
 
-In this project, we will explore the Least Absolute Shrinkage and Selection
-Operator (LASSO) method, commonly known as LASSO regression, to isolate the
-most critical predictors of smartphone addiction. Introduced by Robert
-Tibshirani [-@tibshirani1996], LASSO is a powerful statistical method designed
-for both regularization and variable selection. Traditional ordinary least
-squares (OLS) regression treats every available variable as important, which
-often introduces noise and reduces predictive accuracy when dealing with large
-datasets. LASSO solves this problem by adding a mathematical constraint—known
-as an L1 penalty—to the sum of the absolute values of the regression
-coefficients [@tibshirani1996].
+In this project, we will explore the Least Absolute Shrinkage and
+Selection Operator (LASSO) method, commonly known as LASSO regression,
+to isolate the most critical predictors of smartphone addiction.
+Introduced by Robert Tibshirani [-@tibshirani1996], LASSO is a powerful
+statistical method designed for both regularization and variable
+selection. Traditional ordinary least squares (OLS) regression treats
+every available variable as important, which often introduces noise and
+reduces predictive accuracy when dealing with large datasets. LASSO
+solves this problem by adding a mathematical constraint—known as an L1
+penalty—to the sum of the absolute values of the regression coefficients
+[@tibshirani1996].
 
 This L1 penalty performs a unique function: it actively shrinks the
-coefficients of less important variables toward zero [@james2013]. Notably,
-unlike other methods such as Ridge regression, LASSO can force coefficients to
-become exactly zero [@tibshirani1996]. LASSO automatically performs variable
-selection, completely removing irrelevant or redundant features from the final
-model, resulting in a highly interpretable, sparse model consisting only of the
-most statistically significant predictors.
+coefficients of less important variables toward zero [@james2013].
+Notably, unlike other methods such as Ridge regression, LASSO can force
+coefficients to become exactly zero [@tibshirani1996]. LASSO
+automatically performs variable selection, completely removing
+irrelevant or redundant features from the final model, resulting in a
+highly interpretable, sparse model consisting only of the most
+statistically significant predictors.
 
-Our dataset explores problematic smartphone usage from survey data from a
-Computer Adaptive Testing (CAT) item bank. It is comprised of 1,619
-respondents with complete data on six instrument families plus the demographics.
+Our dataset explores problematic smartphone usage from survey data
+collected in China using a Computer Adaptive Testing (CAT) item bank
+[@gao2024]. It is comprised of 1,619 respondents with complete data on
+six instrument families plus the demographics.
 
-Here we will apply LASSO regression to a comprehensive smartphone addiction
-dataset to break down which specific behaviors and demographics truly drive the
-dependencies. Smartphone datasets are particularly noisy, with variables like
-social media screen time, daily notification counts, and self-reported anxiety
-scores often overlapping and distorting traditional models. By implementing
-LASSO, we can mathematically weed out any statistical noise, isolating the
-leading factors [@james2013]. Ideally, this approach will aid us in answering a
-crucial question: with the countless digital metrics tracked today, which
-factors truly lead to smartphone addictions? Our findings aim to provide a
-streamlined, data-driven framework that peers and clinicians alike can use to
-understand and combat digital dependency.
+Here we will apply LASSO regression to a comprehensive smartphone
+addiction dataset to break down which specific behaviors and
+demographics truly drive the dependencies. Smartphone datasets are
+particularly noisy, with variables like social media screen time, daily
+notification counts, and self-reported anxiety scores often overlapping
+and distorting traditional models. By implementing LASSO, we can
+mathematically weed out any statistical noise, isolating the leading
+factors [@james2013]. Ideally, this approach will aid us in answering a
+crucial question: with the countless digital metrics tracked today,
+which factors truly lead to smartphone addictions? Our findings aim to
+provide a streamlined, data-driven framework that peers and clinicians
+alike can use to understand and combat digital dependency.
 
-| Abbreviation | Scale |
-|--------------|-------|
-| NMP | Nomophobia |
-| SAPS | Smartphone Addiction Proneness |
-| SPAI | Smartphone Addiction Inventory |
-| MPAS | Mobile Phone Addiction Scale |
-| MPATS | Mobile Phone Addiction Tendency Scale |
-| SAS | Smartphone Addiction Scale (SAS_C / SAS_CA items) |
+| Abbreviation | Scale                                             |
+|--------------|---------------------------------------------------|
+| NMP          | Nomophobia                                        |
+| SAPS         | Smartphone Addiction Proneness                    |
+| SPAI         | Smartphone Addiction Inventory                    |
+| MPAS         | Mobile Phone Addiction Scale                      |
+| MPATS        | Mobile Phone Addiction Tendency Scale             |
+| SAS          | Smartphone Addiction Scale (SAS_C / SAS_CA items) |
 
 ## Methods
 
 We model smartphone addiction severity with penalized linear regression.
 Each respondent contributes item-level responses from six validated
 instrument families (NMP, SAPS, SPAI, MPAS, MPATS, SAS) plus
-demographics. After listwise deletion of incomplete records, $n = 1{,}619$
-complete cases remain. The primary continuous outcome is **SPAI total**,
-the sum of 20 SPAI items (range 20–80) [@lin2014]. SPAI items are
-excluded from the predictor set when predicting SPAI total to avoid
-circularity; we instead ask whether nomophobia, proneness, and related
-scales track overall SPAI severity. A secondary categorical outcome,
-**SPAI item 12**, captures perceived negative impact on study or work on
-a four-point Likert scale.
+demographics. After listwise deletion of incomplete records,
+$n = 1{,}619$ complete cases remain. The primary continuous outcome is
+**SPAI total**, the sum of 20 SPAI items (range 20–80) [@lin2014]. SPAI
+items are excluded from the predictor set when predicting SPAI total to
+avoid circularity; we instead ask whether nomophobia, proneness, and
+related scales track overall SPAI severity. A secondary categorical
+outcome, **SPAI item 12**, captures perceived negative impact on study
+or work on a four-point Likert scale.
 
 ### Ordinary least squares and why LASSO
 
 A standard linear model for continuous outcome $y_i$ and predictors
 $\mathbf{x}_i \in \mathbb{R}^p$ is
 
-$$
-y_i = \beta_0 + \sum_{j=1}^{p} \beta_j x_{ij} + \varepsilon_i,
+$$y_i = \beta_0 + \sum_{j=1}^{p} \beta_j x_{ij} + \varepsilon_i,
 \qquad i = 1,\ldots,n.
-\tag{1}
-$$
+\tag{1}$$
 
 Ordinary least squares (OLS) minimizes the residual sum of squares
 $\sum_{i=1}^{n}(y_i - \hat{y}_i)^2$. With dozens of correlated survey
 items, OLS tends to overfit, inflate coefficient variance, and produce
-unstable signs under multicollinearity [@james2013; @mcneish2015].
-Ridge regression adds an $L_2$ penalty that shrinks coefficients but
-rarely sets them exactly to zero [@hoerl1970]. LASSO replaces that
-penalty with an $L_1$ term, enabling simultaneous shrinkage and variable
-selection [@tibshirani1996; @hesterberg2008].
+unstable signs under multicollinearity [@james2013; @mcneish2015]. Ridge
+regression adds an $L_2$ penalty that shrinks coefficients but rarely
+sets them exactly to zero [@hoerl1970]. LASSO replaces that penalty with
+an $L_1$ term, enabling simultaneous shrinkage and variable selection
+[@tibshirani1996; @hesterberg2008].
 
 ### LASSO objective and tuning
 
 LASSO estimates coefficients by minimizing the penalized least-squares
 objective [@tibshirani1996; @santosa1986]:
 
-$$
-\min_{\boldsymbol{\beta}}
+$$\min_{\boldsymbol{\beta}}
 \left\{
 \sum_{i=1}^{n}
 \left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2
 + \lambda \sum_{j=1}^{p}|\beta_j|
 \right\}.
-\tag{2}
-$$
+\tag{2}$$
 
 The tuning parameter $\lambda \geq 0$ controls the bias–variance
-trade-off. When $\lambda = 0$, Equation (2) reduces to OLS; as
-$\lambda$ increases, more coefficients are driven to exactly zero,
-yielding a sparse, interpretable model [@efron2004; @dalalyan2017].
-We select $\lambda$ with 10-fold cross-validation on an 80/20
-train–test split, reporting both **`lambda.min`** (lowest CV error) and
-**`lambda.1se`** (simplest model within one standard error of the minimum)
-[@james2013]. For the main paper result we emphasize plain LASSO at
-`lambda.1se` as a deliberate parsimony choice: it retains nearly the
-same test $R^2$ while selecting far fewer predictors.
+trade-off. When $\lambda = 0$, Equation (2) reduces to OLS; as $\lambda$
+increases, more coefficients are driven to exactly zero, yielding a
+sparse, interpretable model [@efron2004; @dalalyan2017]. We select
+$\lambda$ with 10-fold cross-validation on an 80/20 train–test split,
+reporting both **`lambda.min`** (lowest CV error) and **`lambda.1se`**
+(simplest model within one standard error of the minimum) [@james2013].
+For the main paper result we emphasize plain LASSO at `lambda.1se` as a
+deliberate parsimony choice: it retains nearly the same test $R^2$ while
+selecting far fewer predictors.
 
 Test-set performance for continuous models is summarized by
 
-$$
-R^2 = 1 - \frac{\sum_{i}(y_i - \hat{y}_i)^2}{\sum_{i}(y_i - \bar{y})^2},
+$$R^2 = 1 - \frac{\sum_{i}(y_i - \hat{y}_i)^2}{\sum_{i}(y_i - \bar{y})^2},
 \qquad
 \mathrm{RMSE} = \sqrt{\frac{1}{n}\sum_{i}(y_i - \hat{y}_i)^2}.
-\tag{3}
-$$
+\tag{3}$$
 
 ### Plain LASSO versus group LASSO
 
@@ -157,10 +154,11 @@ We fit two complementary LASSO variants implemented in **`glmnet`**
 
 **Plain LASSO** (`alpha = 1`, `family = "gaussian"`) performs item-level
 selection: any individual survey item may enter or leave the model.
-**Group LASSO** assigns all items within a scale (e.g., SAPS) to a single
-group and selects entire scales at once [@yuan2006; @huang2024]. Plain
-LASSO answers which specific items matter; group LASSO answers which
-whole instruments matter when scales are treated as coherent units.
+**Group LASSO** assigns all items within a scale (e.g., SAPS) to a
+single group and selects entire scales at once [@yuan2006; @huang2024].
+Plain LASSO answers which specific items matter; group LASSO answers
+which whole instruments matter when scales are treated as coherent
+units.
 
 For classification of SPAI item 12, we additionally fit multinomial
 LASSO (`family = "multinomial"`) and refit a multinomial log-linear
@@ -170,65 +168,40 @@ with balanced accuracy and Cohen's $\kappa$ on the held-out test set.
 
 ### Justification for this problem and data
 
-Our CAT item bank contains on the order of 100 item-level predictors that
-measure overlapping facets of problematic phone use [@gao2024]. Pearson
-correlations among scale totals exceed $r = 0.64$ for several pairs (see
-Data Exploration), so multicollinearity is expected rather than
-exceptional. LASSO is well suited to high-dimensional, collinear
+Our CAT item bank contains on the order of 100 item-level predictors
+that measure overlapping facets of problematic phone use [@gao2024].
+Pearson correlations among scale totals exceed $r = 0.64$ for several
+pairs (see Data Exploration), so multicollinearity is expected rather
+than exceptional. LASSO is well suited to high-dimensional, collinear
 psychological survey data because it stabilizes estimation and returns a
 sparse subset of items or scales that best predict addiction severity
-[@mcneish2015; @dalalyan2017]. Comparing plain and group LASSO, alongside
-`lambda.min` and `lambda.1se`, lets us balance predictive accuracy against
-interpretability—an important consideration when communicating results to
-clinicians and educators [@james2013; @huang2024].
+[@mcneish2015; @dalalyan2017]. Comparing plain and group LASSO,
+alongside `lambda.min` and `lambda.1se`, lets us balance predictive
+accuracy against interpretability—an important consideration when
+communicating results to clinicians and educators [@james2013;
+@huang2024].
 
 ## Analysis and Results
 
 ### Data Exploration and Visualization
 
-Data come from a Computer Adaptive Testing (CAT) item bank on problematic
-mobile phone use [@gao2024]. Respondents completed items from six
-instrument families—nomophobia (NMP), smartphone addiction proneness
-(SAPS), the Smartphone Addiction Inventory (SPAI) [@lin2014], the Mobile
-Phone Addiction Scale (MPAS), the Mobile Phone Addiction Tendency Scale
-(MPATS), and the Smartphone Addiction Scale (SAS-C and SAS-CA)—along with
-demographics (age, gender, grade). The raw file contains
-$n = 1{,}619$ respondents with complete records on all variables; no
-listwise missingness remains after filtering. Scale totals are computed as
-the sum of item scores within each instrument (higher totals indicate more
-problematic use, per the item bank codebook).
+Data come from a Computer Adaptive Testing (CAT) item bank on
+problematic mobile phone use [@gao2024]. Respondents completed items
+from six instrument families—nomophobia (NMP), smartphone addiction
+proneness (SAPS), the Smartphone Addiction Inventory (SPAI) [@lin2014],
+the Mobile Phone Addiction Scale (MPAS), the Mobile Phone Addiction
+Tendency Scale (MPATS), and the Smartphone Addiction Scale (SAS-C and
+SAS-CA)—along with demographics (age, gender, grade). The raw file
+contains $n = 1{,}619$ respondents with complete records on all
+variables; no listwise missingness remains after filtering. Scale totals
+are computed as the sum of item scores within each instrument (higher
+totals indicate more problematic use, per the item bank codebook).
 
-The sample is predominantly young adults (mean age $\approx 18.8$ years,
-$SD \approx 2.9$), with more female ($n = 991$) than male ($n = 628$)
+The sample is predominantly young adults (mean age $= 18.8$ years,
+$SD = 2.9$), with more female ($n = 991$) than male ($n = 628$)
 respondents. SPAI total—the primary outcome for regression—has mean
-$\approx 41.8$ ($SD \approx 10.2$) on the 20–80 scale, with a roughly
-symmetric distribution centered below the midpoint. When scale totals are
-rescaled to percentages of each instrument's maximum, **NMP** shows the
-highest average endorsement ($\approx 69\%$ of maximum), whereas SAPS,
-SPAI, MPAS, MPATS, and SAS cluster between 40% and 52%—suggesting that
-fear of disconnection is reported more intensely than other addiction
-symptoms in this cohort.
-
-Pearson correlations with SPAI total rank the predictor scales as follows:
-SAS ($r \approx 0.81$), SAPS ($r \approx 0.71$), MPATS ($r \approx 0.71$),
-MPAS ($r \approx 0.65$), and NMP ($r \approx 0.55$). A scatter plot of SAS
-(the strongest correlate) against SPAI total shows a strong linear trend with
-modest residual spread. A correlation heatmap further reveals that all six scale totals
-move together (inter-scale $r$ often exceeds 0.60), confirming substantial
-**convergent validity** among instruments but also highlighting the
-multicollinearity that motivates LASSO regularization.
-
-Two patterns warrant attention before modeling. First, **SPAI item 12**
-(perceived impact on study/work) is highly imbalanced: levels 1–4 contain
-262, 577, 688, and 92 responses respectively, so the rarest category is
-only $\approx 6\%$ of the sample—classification models must account for
-this skew. Second, although NMP averages highest in percentage terms, it
-correlates **weakest** with SPAI total among the five non-SPAI scales, hinting
-that nomophobia may be partially redundant once proneness (SAPS) and SAS
-symptoms are considered—a pattern consistent with preliminary LASSO results
-where NMP items are often zeroed out. Demographic boxplots show modest SPAI
-differences by gender and grade but no single grade level dominates severity
-scores.
+$= 41.8$ ($SD = 10.2$) on the 20–80 scale, with a roughly symmetric
+distribution centered below the midpoint.
 
 ```{r viz-setup, warning=FALSE, message=FALSE}
 library(tidyverse)
@@ -270,49 +243,32 @@ ggplot(dat, aes(x = SPAI_total)) +
   )
 ```
 
-```{r fig-scale-boxplots, fig.cap="Scale totals rescaled to percent of each instrument maximum for comparability."}
-scale_max <- c(NMP = 80, SAPS = 50, SPAI = 80, MPAS = 55,
-               MPATS = 80, SAS = 150)
+Pearson correlations with SPAI total rank the predictor scales as
+follows: SAS ($r = 0.81$), SAPS ($r = 0.71$), MPATS ($r = 0.71$), MPAS
+($r = 0.65$), and NMP ($r = 0.55$). The scatter plot below shows the
+strongest of these relationships—SAS against SPAI total—with a strong
+linear trend and modest residual spread.
 
-long_scales <- dat %>%
-  select(NMP_total, SAPS_total, SPAI_total, MPAS_total,
-         MPATS_total, SAS_total) %>%
-  pivot_longer(everything(), names_to = "Scale", values_to = "Score") %>%
-  mutate(
-    Scale = str_remove(Scale, "_total"),
-    Pct = Score / scale_max[Scale] * 100,
-    Scale = factor(Scale, levels = names(scale_max))
-  )
-
-ggplot(long_scales, aes(x = Scale, y = Pct, fill = Scale)) +
-  geom_boxplot(alpha = 0.75, outlier.size = 0.6, outlier.alpha = 0.4) +
-  scale_fill_brewer(palette = "Set2", guide = "none") +
+```{r fig-scatter-sas, fig.cap="SAS total versus SPAI total with OLS trend line and 95% CI band."}
+ggplot(dat, aes(x = SAS_total, y = SPAI_total)) +
+  geom_point(alpha = 0.25, size = 1.2, color = "#4C72B0") +
+  geom_smooth(method = "lm", se = TRUE, color = "#C44E52",
+              fill = "#f4a7a9", linewidth = 1.1) +
+  annotate("text",
+           x = max(dat$SAS_total) * 0.05,
+           y = max(dat$SPAI_total) * 0.96, hjust = 0,
+           label = paste0("r = ", round(cor(dat$SAS_total, dat$SPAI_total), 2)),
+           size = 4.5, fontface = "bold", color = "#C44E52") +
   labs(
-    title = "Score Distributions Across All Six Scales",
-    x = NULL, y = "Score (% of maximum)"
+    title = "SAS Total vs SPAI Total",
+    x = "SAS Total (Smartphone Addiction Scale)", y = "SPAI Total (Addiction Severity)"
   )
 ```
 
-```{r fig-correlations, fig.cap="Pearson correlations between non-SPAI scale totals and SPAI total."}
-corr_df <- dat %>%
-  summarise(
-    NMP   = cor(NMP_total,   SPAI_total),
-    SAPS  = cor(SAPS_total,  SPAI_total),
-    MPAS  = cor(MPAS_total,  SPAI_total),
-    MPATS = cor(MPATS_total, SPAI_total),
-    SAS   = cor(SAS_total,   SPAI_total)
-  ) %>%
-  pivot_longer(everything(), names_to = "Scale", values_to = "r") %>%
-  mutate(Scale = fct_reorder(Scale, r))
-
-ggplot(corr_df, aes(x = Scale, y = r, fill = r)) +
-  geom_col(width = 0.6, alpha = 0.9) +
-  geom_text(aes(label = round(r, 2)), hjust = -0.15, fontface = "bold") +
-  scale_fill_gradient(low = "#9ecae1", high = "#08519c", guide = "none") +
-  scale_y_continuous(limits = c(0, 1), expand = expansion(mult = c(0, 0.12))) +
-  coord_flip() +
-  labs(title = "Pearson Correlations with SPAI Total", x = NULL, y = "Pearson r")
-```
+All six scale totals move together (inter-scale $r$ often exceeds 0.60),
+confirming substantial **convergent validity** among instruments but
+also highlighting the multicollinearity that motivates LASSO
+regularization.
 
 ```{r fig-corr-heatmap, fig.cap="Pearson correlation heatmap among scale totals (complete cases)."}
 corr_cols <- c("NMP_total", "SAPS_total", "SPAI_total", "MPAS_total",
@@ -337,21 +293,17 @@ ggplot(corr_long, aes(x = Scale2, y = Scale1, fill = r)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-```{r fig-scatter-sas, fig.cap="SAS total versus SPAI total with OLS trend line and 95% CI band."}
-ggplot(dat, aes(x = SAS_total, y = SPAI_total)) +
-  geom_point(alpha = 0.25, size = 1.2, color = "#4C72B0") +
-  geom_smooth(method = "lm", se = TRUE, color = "#C44E52",
-              fill = "#f4a7a9", linewidth = 1.1) +
-  annotate("text",
-           x = max(dat$SAS_total) * 0.05,
-           y = max(dat$SPAI_total) * 0.96, hjust = 0,
-           label = paste0("r = ", round(cor(dat$SAS_total, dat$SPAI_total), 2)),
-           size = 4.5, fontface = "bold", color = "#C44E52") +
-  labs(
-    title = "SAS Total vs SPAI Total",
-    x = "SAS Total (Smartphone Addiction Scale)", y = "SPAI Total (Addiction Severity)"
-  )
-```
+Two patterns warrant attention before modeling. First, **SPAI item 12**
+(perceived impact on study/work) is highly imbalanced: levels 1–4
+contain 262, 577, 688, and 92 responses respectively, so the rarest
+category is only $5.7\%$ of the sample—classification models must
+account for this skew. Second, although NMP shows the highest average
+endorsement when rescaled to a percentage of maximum ($= 68.8\%$), it
+correlates **weakest** with SPAI total among the five non-SPAI scales,
+hinting that nomophobia may be partially redundant once proneness (SAPS)
+and SAS symptoms are considered—a pattern consistent with preliminary
+LASSO results where NMP items are often zeroed out. The figure below
+summarizes the age and gender composition of the sample.
 
 ```{r fig-demographics, fig.cap="Age distribution and demographic breakdown (complete cases).", fig.width=10, fig.height=4}
 gender_labels <- c("1" = "Male", "2" = "Female")
@@ -371,20 +323,20 @@ p_age + p_gender + plot_layout(widths = c(2, 1))
 ```
 
 Together, these exploratory plots motivate our modeling strategy: SPAI
-total is suitable as a continuous Gaussian outcome; the strong SAPS and SAS
-relationships suggest they will dominate LASSO selection; and the shared
-variance across scales justifies penalized regression over unregularized OLS
-[@james2013; @gao2024].
+total is suitable as a continuous Gaussian outcome; the strong SAPS and
+SAS relationships suggest they will dominate LASSO selection; and the
+shared variance across scales justifies penalized regression over
+unregularized OLS [@james2013; @gao2024].
 
 ### Modeling and Results
 
--   Explain your data preprocessing and cleaning steps.
+- Explain your data preprocessing and cleaning steps.
 
--   Present your key findings in a clear and concise manner.
+- Present your key findings in a clear and concise manner.
 
--   Use visuals to support your claims.
+- Use visuals to support your claims.
 
--   **Tell a story about what the data reveals.**
+- **Tell a story about what the data reveals.**
 
 ```{r}
 
@@ -392,8 +344,8 @@ variance across scales justifies penalized regression over unregularized OLS
 
 ### Conclusion
 
--   Summarize your key findings.
+- Summarize your key findings.
 
--   Discuss the implications of your results.
+- Discuss the implications of your results.
 
 ## References
