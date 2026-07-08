@@ -10,3 +10,14 @@ scripts/jad160_CellphoneAddiction_Lasso.R
 
 # Editor / IDE settings (local only)
 .vscode/
+
+# Quarto files
+.quarto/
+_revealjs/
+_site/
+_revealjs/
+_site/
+_revealjs/
+_site/
+_revealjs/
+_site/

@@ -1,4 +1,4 @@
----
+﻿---
 title: "Lasso Regression on Cellphone Use Addiction "
 author: "Richard Odgers, Melissa Bolen, Jillian Mouser, Jonathan De La Torre (Advisor: Dr. Cohen)"
 date: '`r Sys.Date()`'
@@ -340,9 +340,9 @@ the predictor matrix when modeling SPAI total to avoid circularity.
 Demographics (age, gender, grade) and item-level responses from NMP,
 SAPS, MPAS, MPATS, and SAS (SAS-C and SAS-CA) entered as predictors.
 Gender and grade were coded as factors; all item responses were treated
-as numeric. Predictors were assembled with a model matrix (no
-intercept column in the penalized fit). Respondents were split 80/20
-into training and test sets using stratification on SPAI item 12
+as numeric. Predictors were assembled with a model matrix (no intercept
+column in the penalized fit). Respondents were split 80/20 into training
+and test sets using stratification on SPAI item 12
 (`caret::createDataPartition`) so that the imbalanced categorical
 outcome remained represented in both partitions; all continuous models
 below use the same split.
@@ -454,9 +454,10 @@ plain LASSO at `lambda.1se` achieved $R^2 = `r gauss_results$R2[1]`$ and
 RMSE $= `r gauss_results$RMSE[1]`$, selecting `r gauss_results$N_selected[1]`
 predictors. Group LASSO at `lambda.min` reached a similar $R^2 = `r gauss_results$R2[2]`$
 but retained `r gauss_results$N_selected[2]` predictors—substantially more
-complexity for little additional explanatory gain. In practical terms, the
-non-SPAI scales explain roughly three-quarters of the variation in SPAI
-total severity on respondents the model had not seen during training.
+predictors—substantially more complexity for little additional
+explanatory gain. In practical terms, the non-SPAI scales explain
+roughly three-quarters of the variation in SPAI total severity on
+respondents the model had not seen during training.
 
 ```{r tbl-gaussian, tbl.cap="Gaussian LASSO models predicting SPAI total from non-SPAI items (test set)."}
 kable(gauss_results, align = c("l", "r", "r", "r"),
@@ -481,22 +482,21 @@ ggplot(scale_counts, aes(x = reorder(Scale, N_items), y = N_items, fill = Scale)
 
 These results align with the exploratory correlation structure: SAS and
 SAPS track SPAI total most closely, and LASSO uses that shared variance
-efficiently while zeroing out redundant nomophobia items. The high
-test $R^2$ should be interpreted as **convergent validity** among
-overlapping addiction measures rather than evidence of causal effects
-[@gao2024; @lin2014].
+efficiently while zeroing out redundant nomophobia items. The high test
+$R^2$ should be interpreted as **convergent validity** among overlapping
+addiction measures rather than evidence of causal effects [@gao2024;
+@lin2014].
 
 ### Conclusion
 
 Using LASSO regression on a Chinese CAT item bank of problematic mobile
 phone use [@gao2024], we showed that a sparse plain-LASSO model can
 predict SPAI total addiction severity with strong held-out accuracy
-($R^2 \approx 0.75$) from other validated scales and demographics.
-**SAPS** and **SAS** emerged as the dominant predictors; **NMP**
-(nomophobia) added little once those instruments were in the model. Plain
-LASSO at `lambda.1se` offered the best balance of fit and parsimony
-relative to group LASSO, which selected many more items for comparable
-performance.
+($R^2 = 0.75$) from other validated scales and demographics. **SAPS**
+and **SAS** emerged as the dominant predictors; **NMP** (nomophobia)
+added little once those instruments were in the model. Plain LASSO at
+`lambda.1se` offered the best balance of fit and parsimony relative to
+group LASSO, which selected many more items for comparable performance.
 
 Several implications follow from these findings. First, the instruments
 in this item bank measure closely related facets of problematic
@@ -512,7 +512,8 @@ settings; replication in U.S. or other populations would clarify whether
 SAPS and SAS remain the leading predictors of SPAI severity. Third, for
 clinicians and educators working with similar screening batteries, a
 short subset of SAPS and SAS items identified by LASSO may suffice to
-estimate overall severity, though prospective validation is still needed.
+estimate overall severity, though prospective validation is still
+needed.
 
 Future work could examine post-LASSO refitting, robustness across
 train–test splits and random seeds, and ordered-outcome models for SPAI
