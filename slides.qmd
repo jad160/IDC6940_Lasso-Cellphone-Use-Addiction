@@ -22,16 +22,23 @@ execute:
 
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
+library(tidyverse)
 library(glmnet)
 library(grpreg)
 library(caret)
-library(dplyr)
-library(tidyr)
 library(knitr)
-library(ggplot2)
+library(patchwork)
 
 RANDOM_SEED <- 123
 set.seed(RANDOM_SEED)
+
+theme_set(
+  theme_minimal(base_size = 16) +
+    theme(
+      plot.title = element_text(face = "bold"),
+      panel.grid.minor = element_blank()
+    )
+)
 
 assign_group <- function(nm) {
   if (grepl("^gender", nm)) return("gender")
@@ -49,7 +56,7 @@ assign_group <- function(nm) {
 
 make_reg_mm <- function(dat) {
   spai_items <- paste0("SPAI_", 1:20)
-  d <- dat[, !names(dat) %in% c(spai_items, "SPAI_12_num", "SPAI_total"), drop = FALSE]
+  d <- dat[, !names(dat) %in% c(spai_items, "SPAI_total"), drop = FALSE]
   d$SPAI_total <- dat$SPAI_total
   x <- model.matrix(SPAI_total ~ ., data = d)[, -1]
   list(
@@ -61,15 +68,8 @@ make_reg_mm <- function(dat) {
 
 plain_lasso_vars <- function(cv_fit, lambda_label, cols) {
   raw_coef <- coef(cv_fit, s = lambda_label)
-  if (is.list(raw_coef)) {
-    vars <- unique(unlist(lapply(raw_coef, function(m) {
-      mat <- as.matrix(m)
-      rownames(mat)[mat[, 1] != 0]
-    })))
-  } else {
-    mat <- as.matrix(raw_coef)
-    vars <- rownames(mat)[mat[, 1] != 0]
-  }
+  mat <- as.matrix(raw_coef)
+  vars <- rownames(mat)[mat[, 1] != 0]
   intersect(setdiff(vars, "(Intercept)"), cols)
 }
 
@@ -81,22 +81,30 @@ group_lasso_vars <- function(cv_fit, lambda_val, cols) {
 reg_metrics <- function(y_true, y_pred) {
   ss_res <- sum((y_true - y_pred)^2)
   ss_tot <- sum((y_true - mean(y_true))^2)
-  list(R2 = 1 - ss_res / ss_tot, RMSE = sqrt(mean((y_true - y_pred)^2)))
+  list(
+    R2 = 1 - ss_res / ss_tot,
+    RMSE = sqrt(mean((y_true - y_pred)^2))
+  )
 }
 
 dat <- read.csv("data/DATA_Problematic Mobile Phone Use CAT.csv")
 dat <- dat[complete.cases(dat), ]
-dat$gender <- as.factor(dat$gender)
-dat$grade <- as.factor(dat$grade)
-dat$SPAI_total <- rowSums(dat[, paste0("SPAI_", 1:20)])
-dat$SPAI_12 <- as.factor(dat$SPAI_12)
 
 dat$NMP_total   <- rowSums(dat[, paste0("NMP_",   1:16)])
 dat$SAPS_total  <- rowSums(dat[, paste0("SAPS_",  1:10)])
+dat$SPAI_total  <- rowSums(dat[, paste0("SPAI_",  1:20)])
 dat$MPAS_total  <- rowSums(dat[, paste0("MPAS_",  1:11)])
 dat$MPATS_total <- rowSums(dat[, paste0("MPATS",  1:16)])
 dat$SAS_total   <- rowSums(dat[, c(paste0("SAS_C", 1:11),
                                     paste0("SAS_CA", 1:14))])
+
+dat$gender <- as.factor(dat$gender)
+dat$grade <- as.factor(dat$grade)
+dat$SPAI_12 <- as.factor(dat$SPAI_12)
+
+gender_labels <- c("1" = "Male", "2" = "Female")
+dat$gender_lab <- factor(gender_labels[as.character(dat$gender)],
+                         levels = unname(gender_labels))
 
 train_index <- createDataPartition(dat$SPAI_12, p = 0.80, list = FALSE)
 mm_reg <- make_reg_mm(dat)
@@ -128,20 +136,6 @@ scale_counts <- sel_plain %>%
   table() %>%
   as.data.frame(stringsAsFactors = FALSE)
 names(scale_counts) <- c("Scale", "N_items")
-scale_counts <- scale_counts %>%
-  filter(Scale != "other") %>%
-  arrange(desc(N_items))
-
-corr_df <- dat %>%
-  summarise(
-    NMP   = cor(NMP_total,   SPAI_total),
-    SAPS  = cor(SAPS_total,  SPAI_total),
-    MPAS  = cor(MPAS_total,  SPAI_total),
-    MPATS = cor(MPATS_total, SPAI_total),
-    SAS   = cor(SAS_total,   SPAI_total)
-  ) %>%
-  pivot_longer(everything(), names_to = "Scale", values_to = "r") %>%
-  mutate(Scale = reorder(Scale, r))
 ```
 
 ## The Problem
@@ -156,28 +150,31 @@ Smartphone use has shifted from convenience to dependency.
 
 ## Our Data
 
-Computer Adaptive Testing (CAT) survey [@gao2024] — **1,619** complete cases
+Survey data collected in **China** using a Computer Adaptive Testing (CAT)
+item bank [@gao2024] — **$n = 1{,}619$** complete cases
 
 | Abbrev. | Scale |
 |---------|-------|
 | NMP | Nomophobia |
-| SAPS | Addiction proneness |
-| SPAI | Addiction inventory (outcome) |
-| MPAS | Mobile phone addiction |
-| MPATS | Addiction tendency |
-| SAS | Smartphone addiction scale |
+| SAPS | Smartphone addiction proneness |
+| SPAI | Smartphone Addiction Inventory (outcome) |
+| MPAS | Mobile Phone Addiction Scale |
+| MPATS | Mobile Phone Addiction Tendency Scale |
+| SAS | Smartphone Addiction Scale (SAS-C / SAS-CA) |
 
-Plus age, gender, and grade (mean age ≈ 18.8; 991 F / 628 M).
+Plus age, gender, and grade (mean age $= 18.8$; 991 F / 628 M).
 
 ## Outcome & Approach
 
-**Outcome:** SPAI total (sum of 20 SPAI items, 20–80; mean ≈ 41.8)
+**Primary outcome:** SPAI total — sum of 20 SPAI items (20–80; mean $= 41.8$)
 
-**Predictors:** all other scales + demographics — SPAI items excluded (they define the score)
+**Predictors:** NMP, SAPS, MPAS, MPATS, SAS items + demographics — SPAI items excluded (they define the score)
+
+**Secondary outcome:** SPAI item 12 (perceived impact on study/work; 4-level Likert)
 
 **Method:** LASSO [@tibshirani1996] — $L_1$ penalty shrinks weak coefficients to zero [@james2013; @hesterberg2008]
 
-## LASSO in One Equation
+## LASSO Objective
 
 $$
 \min_{\boldsymbol{\beta}}
@@ -188,92 +185,158 @@ $$
 \right\}
 $$
 
-- $\lambda$ tuned by 10-fold CV (`lambda.min` vs `lambda.1se`)
-- **Plain LASSO** — item-level selection (`glmnet`)
+- $\lambda$ tuned by 10-fold CV on an 80/20 split (`lambda.min` vs `lambda.1se`)
+- **Plain LASSO** — item-level selection (`glmnet`) [@james2013]
 - **Group LASSO** — whole-scale selection (`grpreg`) [@yuan2006; @huang2024]
-
-## Two Modeling Dials
-
-| | Category (multinomial) | Number (Gaussian) |
-|---|---|---|
-| **Item-level** (Plain) | Predict SPAI_12 class | Predict SPAI total |
-| **Scale-level** (Group) | Predict SPAI_12 class | Predict SPAI total |
-
-12 models total: 8 classification + 4 Gaussian regression
-
-## Exploratory Findings
-
-- **NMP** highest mean endorsement (~69% of max) but **weakest** SPAI correlation
-- **SAS** strongest predictor ($r \approx 0.81$), then SAPS / MPATS (~0.71)
-- All six scales highly intercorrelated → convergent validity + multicollinearity
-- **SPAI item 12** imbalanced (~6% in rarest category)
+- **Main result:** plain LASSO at `lambda.1se` (parsimony vs fit)
 
 ## SPAI Severity in the Sample
 
-```{r spa-total-hist}
-#| fig-width: 8
+```{r fig-spai-dist}
+#| fig-width: 9
 #| fig-height: 4.5
 
 ggplot(dat, aes(x = SPAI_total)) +
   geom_histogram(binwidth = 3, fill = "#4C72B0", color = "white", alpha = 0.85) +
   geom_vline(xintercept = mean(dat$SPAI_total), linetype = "dashed",
              color = "#C44E52", linewidth = 0.9) +
+  annotate("text",
+           x = mean(dat$SPAI_total) + 1.5, y = Inf, vjust = 1.5, hjust = 0,
+           label = paste0("Mean = ", round(mean(dat$SPAI_total), 1)),
+           color = "#C44E52", size = 4) +
   labs(
-    x = "SPAI total score",
-    y = "Respondents",
-    title = "Distribution of smartphone addiction severity (SPAI total)"
-  ) +
-  theme_minimal(base_size = 18)
+    title = "Distribution of SPAI Total Score",
+    x = "SPAI Total (20–80)", y = "Count"
+  )
 ```
 
-## Correlations with SPAI Total
+## Strongest Correlation: SAS vs SPAI
 
-```{r corr-bar}
-#| fig-width: 8
+SAS ($r = 0.81$) > SAPS / MPATS ($r = 0.71$) > MPAS ($r = 0.65$) > NMP ($r = 0.55$)
+
+```{r fig-scatter-sas}
+#| fig-width: 9
 #| fig-height: 4.5
 
-ggplot(corr_df, aes(x = Scale, y = r, fill = r)) +
-  geom_col(width = 0.6, alpha = 0.9) +
-  geom_text(aes(label = round(r, 2)), hjust = -0.15, size = 5, fontface = "bold") +
-  scale_fill_gradient(low = "#9ecae1", high = "#08519c", guide = "none") +
-  scale_y_continuous(limits = c(0, 1), expand = expansion(mult = c(0, 0.12))) +
-  coord_flip() +
-  labs(x = NULL, y = "Pearson r", title = "Non-SPAI scales vs SPAI total") +
-  theme_minimal(base_size = 18)
+ggplot(dat, aes(x = SAS_total, y = SPAI_total)) +
+  geom_point(alpha = 0.25, size = 1.2, color = "#4C72B0") +
+  geom_smooth(method = "lm", se = TRUE, color = "#C44E52",
+              fill = "#f4a7a9", linewidth = 1.1) +
+  annotate("text",
+           x = max(dat$SAS_total) * 0.05,
+           y = max(dat$SPAI_total) * 0.96, hjust = 0,
+           label = paste0("r = ", round(cor(dat$SAS_total, dat$SPAI_total), 2)),
+           size = 5, fontface = "bold", color = "#C44E52") +
+  labs(
+    title = "SAS Total vs SPAI Total",
+    x = "SAS Total (Smartphone Addiction Scale)",
+    y = "SPAI Total (Addiction Severity)"
+  )
 ```
 
-## Live Results — Gaussian LASSO
+## Convergent Validity & Multicollinearity
 
-Single 80/20 split · test set *n* = `r nrow(mm_reg$x) - length(train_index)`
+All six scale totals move together (inter-scale $r$ often exceeds 0.60) — motivates LASSO over OLS.
 
-```{r gauss-table}
-kable(gauss_results, align = c("l", "r", "r", "r"))
+```{r fig-corr-heatmap}
+#| fig-width: 8
+#| fig-height: 5
+
+corr_cols <- c("NMP_total", "SAPS_total", "SPAI_total", "MPAS_total",
+               "MPATS_total", "SAS_total")
+corr_mat <- cor(dat[, corr_cols], use = "complete.obs")
+
+corr_long <- as.data.frame(corr_mat) %>%
+  mutate(Scale1 = rownames(.)) %>%
+  pivot_longer(-Scale1, names_to = "Scale2", values_to = "r") %>%
+  mutate(
+    Scale1 = gsub("_total", "", Scale1),
+    Scale2 = gsub("_total", "", Scale2)
+  )
+
+ggplot(corr_long, aes(x = Scale2, y = Scale1, fill = r)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = sprintf("%.2f", r)), size = 3.5, color = "black") +
+  scale_fill_gradient2(low = "#B2182B", mid = "white", high = "#2166AC",
+                       midpoint = 0, limits = c(-1, 1)) +
+  labs(x = NULL, y = NULL, fill = "r", title = "Scale Total Correlations")
 ```
 
-Other scales explain about **three-quarters** of SPAI-total variation on held-out respondents.
+## Patterns Before Modeling
 
-## Selected Scales (Plain LASSO, lambda.1se)
+- **SPAI item 12** highly imbalanced — rarest category $= 5.7\%$ of sample
+- **NMP** highest mean endorsement ($= 68.8\%$ of max) but **weakest** SPAI correlation
+- Nomophobia may be redundant once SAPS and SAS are in the model
 
-```{r scale-bar}
+```{r fig-demographics}
+#| fig-width: 9
+#| fig-height: 3.5
+
+p_age <- ggplot(dat, aes(x = age)) +
+  geom_histogram(bins = 25, fill = "#4C78A8", color = "white") +
+  labs(title = "Age", x = "Years", y = "Count")
+
+p_gender <- dat %>% count(gender_lab) %>%
+  ggplot(aes(x = gender_lab, y = n, fill = gender_lab)) +
+  geom_col(show.legend = FALSE) +
+  labs(title = "Gender", x = NULL, y = "Count")
+
+p_age + p_gender + plot_layout(widths = c(2, 1))
+```
+
+## Data Preprocessing
+
+- $n = 1{,}619$ complete cases; no listwise missingness
+- SPAI total = sum of 20 SPAI items; other SPAI items removed from predictors
+- Model matrix from NMP, SAPS, MPAS, MPATS, SAS items + demographics
+- 80/20 train–test split, stratified on SPAI item 12 (`caret`)
+
+## Gaussian LASSO Results
+
+Test set $n = `r nrow(mm_reg$x) - length(train_index)`$
+
+```{r tbl-gaussian}
+kable(gauss_results, align = c("l", "r", "r", "r"),
+      col.names = c("Model", "R²", "RMSE", "Predictors selected"))
+```
+
+Plain LASSO at `lambda.1se`: $R^2 = `r gauss_results$R2[1]`$, RMSE $= `r gauss_results$RMSE[1]`$, **`r gauss_results$N_selected[1]`** predictors
+
+Group LASSO at `lambda.min`: $R^2 = `r gauss_results$R2[2]`$, **`r gauss_results$N_selected[2]`** predictors — more complexity, little extra gain
+
+## Plain LASSO Selected Predictors
+
+**SAPS** and **SAS** dominate · **NMP** contributes little · demographics minor
+
+```{r fig-selected-scales}
 #| fig-width: 8
 #| fig-height: 4.5
 
 ggplot(scale_counts, aes(x = reorder(Scale, N_items), y = N_items, fill = Scale)) +
   geom_col(show.legend = FALSE) +
   coord_flip() +
-  labs(x = NULL, y = "Selected items", title = "Which instruments matter most?") +
-  theme_minimal(base_size = 18)
+  labs(x = NULL, y = "Selected items",
+       title = "Plain LASSO Selected Predictors by Scale")
 ```
 
-**SAPS** and **SAS** dominate · **NMP** (nomophobia) contributes little
+## Conclusion
 
-## Recommendation & Next Steps
+- Sparse plain LASSO predicts SPAI total with strong held-out accuracy ($R^2 \approx 0.75$)
+- **SAPS** and **SAS** are the dominant predictors; **NMP** adds little once they are included
+- High $R^2$ reflects **convergent validity** among overlapping scales, not causation [@gao2024; @lin2014]
 
-**Recommended model:** Plain LASSO at `lambda.1se` — strong R² with far fewer predictors than group LASSO
+## China & Generalizability
 
-- Scales overlap → convergent validity, not causation
-- External validation on a new sample
-- Robustness across seeds/splits
-- Write up why SAPS/SAS track SPAI total
+Sample collected in **China** from predominantly young adults (mean age $= 18.8$) [@gao2024]
+
+- Results should not be generalized uncritically to other countries or age groups
+- Cultural norms around mobile use and education differ across settings
+- External validation in U.S. or other populations is needed
+
+## Future Work
+
+- Post-LASSO refitting and robustness across splits / random seeds
+- Ordered-outcome models for SPAI item 12
+- Prospective validation of a short SAPS + SAS screening subset
 
 ## References
