@@ -449,14 +449,16 @@ scale_counts <- sel_plain %>%
 names(scale_counts) <- c("Scale", "N_items")
 ```
 
-On the held-out test set ($n = `r nrow(mm_reg$x) - length(train_index)`$),
-plain LASSO at `lambda.1se` achieved $R^2 = `r gauss_results$R2[1]`$ and
-RMSE $= `r gauss_results$RMSE[1]`$, selecting `r gauss_results$N_selected[1]`
-predictors. Group LASSO at `lambda.min` reached a similar $R^2 = `r gauss_results$R2[2]`$
-but retained `r gauss_results$N_selected[2]` predictors—substantially more
-complexity for little additional explanatory gain. In practical terms, the
-non-SPAI scales explain roughly three-quarters of the variation in SPAI total
-severity on respondents the model had not seen during training.
+On the held-out test set ($n = `r nrow(mm_reg$x) -
+length(train_index)`$), plain LASSO at`lambda.1se`achieved $R^2 =`r
+gauss_results$R2[1]`$ and RMSE
+$= `r gauss_results$RMSE\[1\]`$, selecting`r
+gauss_results\$N_selected\[1\]`predictors. Group LASSO at`lambda.min`reached a similar $R^2 =`r
+gauss_results$R2[2]`$ but retained `r gauss_results$N_selected[2]`
+predictors—substantially more complexity for little additional
+explanatory gain. In practical terms, the non-SPAI scales explain
+roughly three-quarters of the variation in SPAI total severity on
+respondents the model had not seen during training.
 
 ```{r tbl-gaussian, tbl.cap="Gaussian LASSO models predicting SPAI total from non-SPAI items (test set)."}
 kable(gauss_results, align = c("l", "r", "r", "r"),
