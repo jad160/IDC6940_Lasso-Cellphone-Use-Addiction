@@ -1745,22 +1745,27 @@ ggplot(scale_counts, aes(x = reorder(Scale, N_items), y = N_items, fill = Scale)
 
 ## Conclusion
 
-- Sparse plain LASSO predicts SPAI total with strong held-out accuracy ($R^2 \approx 0.75$)
-- **SAPS** and **SAS** are the dominant predictors; **NMP** adds little once they are included
-- High $R^2$ reflects **convergent validity** among overlapping scales, not causation [@gao2024; @lin2014]
+- Iterative LASSO (81 → 52 → **33** predictors): best balance of test error and complexity
+- Test RMSE $= 5.16$, test $R^2 = 0.75$; further shrinkage (28 / 22 / 19) degraded accuracy
+- Plain LASSO preferred to group LASSO (comparable $R^2$ only with many more predictors)
+- **SAPS** and **SAS** dominate; smaller MPATS role; **NMP** largely zeroed out
+- Post-LASSO OLS on five largest-magnitude items: test $R^2 = 0.66$ (below 0.75, strong for five items)
+- Those five items: compulsive use, habitual time spent, separation panic, sleep loss, academic interference
+- High $R^2$ = **convergent validity**, not causation [@gao2024; @lin2014; @james2013]
+- Multicollinearity ($r > 0.60$) motivates LASSO over OLS [@mcneish2015]
 
 ## China & Generalizability
 
-Sample collected in **China** from predominantly young adults (mean age $= 18.8$) [@gao2024]
+Sample collected in **China** among predominantly young adults (mean age $= 18.8$), more female than male [@gao2024]
 
-- Results should not be generalized uncritically to other countries or age groups
-- Cultural norms around mobile use and education differ across settings
-- External validation in U.S. or other populations is needed
+- Do not generalize to other countries or age groups without external validation
+- 33-item LASSO model—and, where brevity is essential, the five-item OLS subset—can estimate SPAI-like severity without the full battery, pending prospective validation
 
 ## Future Work
 
-- Post-LASSO refitting and robustness across splits / random seeds
-- Ordered-outcome models for SPAI item 12
-- Prospective validation of a short SAPS + SAS screening subset
+- Robustness across train–test splits and random seeds
+- Validate short-form item sets in independent samples
+- Revisit imbalanced SPAI item 12 with class-imbalance-appropriate methods
+- Extend beyond the Chinese young-adult cohort to separate context-specific from universal predictors
 
 ## References
