@@ -23,12 +23,17 @@ In today's ever-growing digital era, what began as a tool of
 convenience, smartphones and devices have become a vital piece of our
 daily life. While these items enable instant communication across the
 globe, growing usage has evolved into an increasing psychological and
-social crisis: smartphone addiction. Characterized by the compulsive
+social crisis: smartphone addiction, known formally in literature as 
+Problematic Smartphone Use (PSU). Characterized by the compulsive
 need to check notifications and apps, withdrawal symptoms, and severe
 interference with daily life, smartphone dependency shows an increasing
 link to rising rates of anxiety, sleep deprivation, and diminished
-academic performance among young adults [@lin2014]. Identifying the
-precise behavioral, social, and psychological drivers of this addiction
+academic performance among young adults [@lin2014]. A comprehensive 
+systematic review of 293 global studies establishes that problematic 
+smartphone usage is heavily driven by poor impulse control and negative 
+emotional health, finding that young, female populations are statistically 
+the most vulnerable to developing these dependencies [@busch2021]. Identifying 
+the precise behavioral, social, and psychological drivers of this addiction
 is critical for developing effective interventions. Available data
 tracking screen time, app usage, and psychological metrics frequently
 contain dozens of interconnected variables. Traditional linear
@@ -67,13 +72,17 @@ addiction dataset to break down which specific behaviors and
 demographics truly drive the dependencies. Smartphone datasets are
 particularly noisy, with variables like social media screen time, daily
 notification counts, and self-reported anxiety scores often overlapping
-and distorting traditional models. By implementing LASSO, we can
-mathematically weed out any statistical noise, isolating the leading
-factors [@james2013]. Ideally, this approach will aid us in answering a
-crucial question: with the countless digital metrics tracked today,
-which factors truly lead to smartphone addictions? Our findings aim to
-provide a streamlined, data-driven framework that peers and clinicians
-alike can use to understand and combat digital dependency.
+and distorting traditional models. Furthermore, while extensive behavioral 
+literature identifies broad cognitive antecedents to PSU—such as using 
+devices as a coping mechanism for negative affect—it frequently relies on 
+highly collinear metrics that fail to rank which factors are truly critical. [@busch2021]
+
+By implementing LASSO, we can mathematically weed out any statistical noise, 
+isolating the leading factors [@james2013]. Ideally, this approach will aid 
+us in answering a crucial question: with the countless digital metrics tracked
+today, which factors truly lead to smartphone addictions? Our findings aim to
+provide a streamlined, data-driven framework that peers and clinicians alike 
+can use to understand and combat digital dependency.
 
 | Abbreviation | Scale                                             |
 |--------------|---------------------------------------------------|
