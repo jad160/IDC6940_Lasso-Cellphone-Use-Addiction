@@ -1782,6 +1782,7 @@ mega_dynamic_comparison %>%
     position = "center",
     font_size = 24
   )
+```
 
 ## Questions to ask {.smaller}
 
