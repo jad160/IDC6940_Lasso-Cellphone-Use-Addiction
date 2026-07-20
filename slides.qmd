@@ -139,6 +139,77 @@ scale_counts <- sel_plain %>%
   as.data.frame(stringsAsFactors = FALSE)
 names(scale_counts) <- c("Scale", "N_items")
 ```
+## Project Overview
+
+Using LASSO Regression to Predict Cell Phone Addiction
+
+Purpose
+
+- Investigate factors associated with cell phone addiction.
+- Identify the most important predictors of addiction.
+- Use LASSO regression to reduce the number of variables while maintaining predictive accuracy.
+
+Research Question
+
+Which behavioral and demographic factors are the strongest predictors of cell phone addiction?
+
+## Introduction and Literature Review
+
+Background
+
+ - Smartphone use has increased dramatically worldwide.
+ - Excessive use has been linked to:
+ 
+     - Anxiety
+     - Depression
+     - Poor sleep quality
+     - Lower academic performance
+     - Reduced productivity
+
+## Introduction and Literature Review
+
+Previous studies consistently show that:
+
+ - Younger individuals tend to have higher addiction scores.
+ - Mental health factors play an important role.
+ - Social media and entertainment apps are major contributors.
+ - Many studies rely on traditional regression methods.
+
+Few studies use LASSO regression to determine which predictors truly matter most when many variables are considered simultaneously. [@Busch2021]
+
+## What is LASSO?
+
+LASSO Regression (Least Absolute Shrinkage and Selection Operator) is a machine learning technique that:
+
+ - Builds a prediction model
+ - Shrinks less important coefficients toward zero
+ - Removes unnecessary variables
+ - Produces a simpler, more interpretable model
+
+## Why LASSO?
+
+ - Prevents overfitting
+ - Handles datasets with many predictors
+ - Improves model interpretability
+ - Selects only variables that contribute meaningful information
+
+Simple Visualization:
+
+Many Variables -> LASSO Penalty -> Only Important Variables Remain
+
+## The Problem
+
+There are many possible factors that may influence cell phone addiction:
+
+ - Age
+ - Gender
+ - Daily phone use
+ - Social media habits
+ - Sleep
+ - Mental health
+ - Academic performance
+ - Lifestyle factors
+
 
 ## The Problem
 
@@ -148,7 +219,14 @@ Smartphone use has shifted from convenience to dependency.
 - Links to anxiety, sleep loss, and academic strain [@lin2014]
 - Dozens of overlapping survey variables → multicollinearity [@james2013]
 
-**Question:** Which scales best predict overall addiction severity?
+
+## Why This Project Matters
+
+ - Demonstrates an application of machine learning in behavioral research.
+ - Identifies the strongest predictors of cell phone addiction.
+ - Creates a model that is easier to interpret than traditional regression.
+ - Results may help guide future interventions and prevention efforts.
+
 
 ## Our Data
 
