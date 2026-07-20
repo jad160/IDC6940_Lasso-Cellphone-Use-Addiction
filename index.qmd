@@ -1934,9 +1934,7 @@ preferred specification attained a test RMSE of 5.16 and a test $R^2$ of
 reduction in predictor count relative to the full baseline. Further
 shrinkage to 28, 22, and 19 predictors degraded predictive accuracy—with
 test $R^2$ falling below 0.70 at 19 predictors—and therefore activated
-the stopping rule. Plain LASSO was preferred to group LASSO, which
-attained comparable $R^2$ only by retaining substantially more
-predictors.
+the stopping rule.
 
 Selected items concentrated in SAPS (addiction proneness) and SAS
 (cognitive and behavioral addiction symptoms), with a smaller
