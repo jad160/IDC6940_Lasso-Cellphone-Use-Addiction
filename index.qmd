@@ -1575,7 +1575,7 @@ print(coef_plot)
 
 After performing the lasso regression and reducing the model to only 19
 variables, additional analysis continued. With the optimal model
-containing 33 questions that can be used to predict cellphone addition,
+containing 33 questions that can be used to predict cellphone addiction,
 Ordinary Least Squares was applied to just the top five influential
 predictor variables from the 33 Variable Lasso Regression model as well
 as the 52 lambda.min Lasso Regression model as the results from that
