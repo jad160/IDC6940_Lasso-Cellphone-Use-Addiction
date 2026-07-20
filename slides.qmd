@@ -1792,7 +1792,6 @@ mega_dynamic_comparison %>%
 4. I don’t get enough sleep and feel tired from using mobile phone too much.
 5. Playing mobile phone has affected my academic performance.  
 
-```
 
 ## Conclusion {.smaller}
 
@@ -1800,9 +1799,6 @@ mega_dynamic_comparison %>%
 - 81 → 52 (`lambda.min`) → **33** (`lambda.1se`): best balance of test error and complexity
 - Test RMSE $= 5.16$, test $R^2 = 0.75$ (~59% fewer predictors than baseline)
 - Further shrinkage (28 / 22 / 19) degraded accuracy ($R^2 < 0.70$ at 19) → stopping rule
-
-## Conclusion (continued) {.smaller}
-
 - **SAPS** and **SAS** dominate; smaller MPATS role; **NMP** largely zeroed out
 - Post-LASSO OLS on five items: test $R^2 = 0.66$ (below 0.75, strong for five items)
 - Those items: compulsive use, habitual time spent, separation panic, sleep loss, academic interference
