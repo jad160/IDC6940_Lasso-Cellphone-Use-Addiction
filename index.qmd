@@ -6,7 +6,7 @@ format:
   html:
     code-fold: true
 course: Capstone Projects in Data Science
-bibliography: references.bib # file contains bibtex for references
+#bibliography: references.bib # file contains bibtex for references
 #always_allow_html: true # this allows to get PDF with HTML features
 self-contained: true
 execute: 
@@ -19,61 +19,15 @@ Slides: [slides.html](slides.html){target="_blank"}
 
 ## Introduction
 
-In today's ever-growing digital era, what began as a tool of
-convenience, smartphones and devices have become a vital piece of our
-daily life. While these items enable instant communication across the
-globe, growing usage has evolved into an increasing psychological and
-social crisis: smartphone addiction. Characterized by the compulsive
-need to check notifications and apps, withdrawal symptoms, and severe
-interference with daily life, smartphone dependency shows an increasing
-link to rising rates of anxiety, sleep deprivation, and diminished
-academic performance among young adults [@lin2014]. Identifying the
-precise behavioral, social, and psychological drivers of this addiction
-is critical for developing effective interventions. Available data
-tracking screen time, app usage, and psychological metrics frequently
-contain dozens of interconnected variables. Traditional linear
-regression models struggle under this weight, frequently from
-overfitting and multicollinearity, which obscures the true narrative
-hidden within the data [@james2013].
+In today's ever-growing digital era, what began as a tool of convenience, smartphones and devices have become a vital piece of our daily life. While these items enable instant communication across the globe, growing usage has evolved into an increasing psychological and social crisis: smartphone addiction. Characterized by the compulsive need to check notifications and apps, withdrawal symptoms, and severe interference with daily life, smartphone dependency shows an increasing link to rising rates of anxiety, sleep deprivation, and diminished academic performance among young adults [@lin2014]. Identifying the precise behavioral, social, and psychological drivers of this addiction is critical for developing effective interventions. Available data tracking screen time, app usage, and psychological metrics frequently contain dozens of interconnected variables. Traditional linear regression models struggle under this weight, frequently from overfitting and multicollinearity, which obscures the true narrative hidden within the data [@james2013].
 
-In this project, we will explore the Least Absolute Shrinkage and
-Selection Operator (LASSO) method, commonly known as LASSO regression,
-to isolate the most critical predictors of smartphone addiction.
-Introduced by Robert Tibshirani [-@tibshirani1996], LASSO is a powerful
-statistical method designed for both regularization and variable
-selection. Traditional ordinary least squares (OLS) regression treats
-every available variable as important, which often introduces noise and
-reduces predictive accuracy when dealing with large datasets. LASSO
-solves this problem by adding a mathematical constraint—known as an L1
-penalty—to the sum of the absolute values of the regression coefficients
-[@tibshirani1996].
+In this project, we will explore the Least Absolute Shrinkage and Selection Operator (LASSO) method, commonly known as LASSO regression, to isolate the most critical predictors of smartphone addiction. Introduced by Robert Tibshirani [-@tibshirani1996], LASSO is a powerful statistical method designed for both regularization and variable selection. Traditional ordinary least squares (OLS) regression treats every available variable as important, which often introduces noise and reduces predictive accuracy when dealing with large datasets. LASSO solves this problem by adding a mathematical constraint—known as an L1 penalty—to the sum of the absolute values of the regression coefficients [@tibshirani1996].
 
-This L1 penalty performs a unique function: it actively shrinks the
-coefficients of less important variables toward zero [@james2013].
-Notably, unlike other methods such as Ridge regression, LASSO can force
-coefficients to become exactly zero [@tibshirani1996]. LASSO
-automatically performs variable selection, completely removing
-irrelevant or redundant features from the final model, resulting in a
-highly interpretable, sparse model consisting only of the most
-statistically significant predictors.
+This L1 penalty performs a unique function: it actively shrinks the coefficients of less important variables toward zero [@james2013]. Notably, unlike other methods such as Ridge regression, LASSO can force coefficients to become exactly zero [@tibshirani1996]. LASSO automatically performs variable selection, completely removing irrelevant or redundant features from the final model, resulting in a highly interpretable, sparse model consisting only of the most statistically significant predictors.
 
-Our dataset explores problematic smartphone usage from survey data
-collected in China using a Computer Adaptive Testing (CAT) item bank
-[@gao2024]. It is comprised of 1,619 respondents with complete data on
-six instrument families plus the demographics.
+Our dataset explores problematic smartphone usage from survey data collected in China using a Computer Adaptive Testing (CAT) item bank [@gao2024]. It is comprised of 1,619 respondents with complete data on six instrument families plus the demographics.
 
-Here we will apply LASSO regression to a comprehensive smartphone
-addiction dataset to break down which specific behaviors and
-demographics truly drive the dependencies. Smartphone datasets are
-particularly noisy, with variables like social media screen time, daily
-notification counts, and self-reported anxiety scores often overlapping
-and distorting traditional models. By implementing LASSO, we can
-mathematically weed out any statistical noise, isolating the leading
-factors [@james2013]. Ideally, this approach will aid us in answering a
-crucial question: with the countless digital metrics tracked today,
-which factors truly lead to smartphone addictions? Our findings aim to
-provide a streamlined, data-driven framework that peers and clinicians
-alike can use to understand and combat digital dependency.
+Here we will apply LASSO regression to a comprehensive smartphone addiction dataset to break down which specific behaviors and demographics truly drive the dependencies. Smartphone datasets are particularly noisy, with variables like social media screen time, daily notification counts, and self-reported anxiety scores often overlapping and distorting traditional models. By implementing LASSO, we can mathematically weed out any statistical noise, isolating the leading factors [@james2013]. Ideally, this approach will aid us in answering a crucial question: with the countless digital metrics tracked today, which factors truly lead to smartphone addictions? Our findings aim to provide a streamlined, data-driven framework that peers and clinicians alike can use to understand and combat digital dependency.
 
 | Abbreviation | Scale                                             |
 |--------------|---------------------------------------------------|
@@ -86,40 +40,21 @@ alike can use to understand and combat digital dependency.
 
 ## Methods
 
-We model smartphone addiction severity with penalized linear regression.
-Each respondent contributes item-level responses from six validated
-instrument families (NMP, SAPS, SPAI, MPAS, MPATS, SAS) plus
-demographics. After listwise deletion of incomplete records,
-$n = 1{,}619$ complete cases remain. The primary continuous outcome is
-**SPAI total**, the sum of 20 SPAI items (range 20–80) [@lin2014]. SPAI
-items are excluded from the predictor set when predicting SPAI total to
-avoid circularity; we instead ask whether nomophobia, proneness, and
-related scales track overall SPAI severity. A secondary categorical
-outcome, **SPAI item 12**, captures perceived negative impact on study
-or work on a four-point Likert scale.
+We model smartphone addiction severity with penalized linear regression. Each respondent contributes item-level responses from six validated instrument families (NMP, SAPS, SPAI, MPAS, MPATS, SAS) plus demographics. After listwise deletion of incomplete records, $n = 1{,}619$ complete cases remain. The primary continuous outcome is **SPAI total**, the sum of 20 SPAI items (range 20–80) [@lin2014]. SPAI items are excluded from the predictor set when predicting SPAI total to avoid circularity; we instead ask whether nomophobia, proneness, and related scales track overall SPAI severity. A secondary categorical outcome, **SPAI item 12**, captures perceived negative impact on study or work on a four-point Likert scale.
 
 ### Ordinary least squares and why LASSO
 
-A standard linear model for continuous outcome $y_i$ and predictors
-$\mathbf{x}_i \in \mathbb{R}^p$ is
+A standard linear model for continuous outcome $y_i$ and predictors $\mathbf{x}_i \in \mathbb{R}^p$ is
 
 $$y_i = \beta_0 + \sum_{j=1}^{p} \beta_j x_{ij} + \varepsilon_i,
 \qquad i = 1,\ldots,n.
 \tag{1}$$
 
-Ordinary least squares (OLS) minimizes the residual sum of squares
-$\sum_{i=1}^{n}(y_i - \hat{y}_i)^2$. With dozens of correlated survey
-items, OLS tends to overfit, inflate coefficient variance, and produce
-unstable signs under multicollinearity [@james2013; @mcneish2015]. Ridge
-regression adds an $L_2$ penalty that shrinks coefficients but rarely
-sets them exactly to zero [@hoerl1970]. LASSO replaces that penalty with
-an $L_1$ term, enabling simultaneous shrinkage and variable selection
-[@tibshirani1996; @hesterberg2008].
+Ordinary least squares (OLS) minimizes the residual sum of squares $\sum_{i=1}^{n}(y_i - \hat{y}_i)^2$. With dozens of correlated survey items, OLS tends to overfit, inflate coefficient variance, and produce unstable signs under multicollinearity [@james2013; @mcneish2015]. Ridge regression adds an $L_2$ penalty that shrinks coefficients but rarely sets them exactly to zero [@hoerl1970]. LASSO replaces that penalty with an $L_1$ term, enabling simultaneous shrinkage and variable selection [@tibshirani1996; @hesterberg2008].
 
 ### LASSO objective and tuning
 
-LASSO estimates coefficients by minimizing the penalized least-squares
-objective [@tibshirani1996; @santosa1986]:
+LASSO estimates coefficients by minimizing the penalized least-squares objective [@tibshirani1996; @santosa1986]:
 
 $$\min_{\boldsymbol{\beta}}
 \left\{
@@ -129,16 +64,7 @@ $$\min_{\boldsymbol{\beta}}
 \right\}.
 \tag{2}$$
 
-The tuning parameter $\lambda \geq 0$ controls the bias–variance
-trade-off. When $\lambda = 0$, Equation (2) reduces to OLS; as $\lambda$
-increases, more coefficients are driven to exactly zero, yielding a
-sparse, interpretable model [@efron2004; @dalalyan2017]. We select
-$\lambda$ with 10-fold cross-validation on an 80/20 train–test split,
-reporting both **`lambda.min`** (lowest CV error) and **`lambda.1se`**
-(simplest model within one standard error of the minimum) [@james2013].
-For the main paper result we emphasize plain LASSO at `lambda.1se` as a
-deliberate parsimony choice: it retains nearly the same test $R^2$ while
-selecting far fewer predictors.
+The tuning parameter $\lambda \geq 0$ controls the bias–variance trade-off. When $\lambda = 0$, Equation (2) reduces to OLS; as $\lambda$ increases, more coefficients are driven to exactly zero, yielding a sparse, interpretable model [@efron2004; @dalalyan2017]. We select $\lambda$ with 10-fold cross-validation on an 80/20 train–test split, reporting both **`lambda.min`** (lowest CV error) and **`lambda.1se`** (simplest model within one standard error of the minimum) [@james2013]. For the main paper result we emphasize plain LASSO at `lambda.1se` as a deliberate parsimony choice: it retains nearly the same test $R^2$ while selecting far fewer predictors.
 
 Test-set performance for continuous models is summarized by
 
@@ -147,68 +73,69 @@ $$R^2 = 1 - \frac{\sum_{i}(y_i - \hat{y}_i)^2}{\sum_{i}(y_i - \bar{y})^2},
 \mathrm{RMSE} = \sqrt{\frac{1}{n}\sum_{i}(y_i - \hat{y}_i)^2}.
 \tag{3}$$
 
-### Plain LASSO versus group LASSO
+### Iterative LASSO variable reduction
+Rather than fitting a single LASSO model and choosing between lambda.min and
+lambda.1se, we used an iterative, sequential-refitting procedure in two phases.
 
-We fit two complementary LASSO variants implemented in **`glmnet`**
-(plain) and **`grpreg`** (group) [@james2013; @huang2024].
+Phase 1: Initial selection and stability check. LASSO (glmnet, alpha = 1, Gaussian
+family) was fit using 10-fold CV, with coefficients extracted at lambda.min. Predictors
+with a nonzero coefficient were retained and all others were dropped. We then refit
+LASSO on the surviving predictors, again at lambda.min. Because the penalty was held
+constant, this refit was not expected to drop further predictors. Its purpose was to
+confirm that the first fit had already removed the noise variables and to let the remaining
+coefficients re-adjust now that the eliminated predictors no longer competed for shared
+variance.
 
-**Plain LASSO** (`alpha = 1`, `family = "gaussian"`) performs item-level
-selection: any individual survey item may enter or leave the model.
-**Group LASSO** assigns all items within a scale (e.g., SAPS) to a
-single group and selects entire scales at once [@yuan2006; @huang2024].
-Plain LASSO answers which specific items matter; group LASSO answers
-which whole instruments matter when scales are treated as coherent
-units.
+Phase 2: Escalation. We then switched to lambda.1se, which by construction is more
+aggressive about zeroing out coefficients, and refit on the Phase 1 predictor set. From
+there we continued refitting the surviving predictors at successively larger multiples of
+lambda.1se. The size of each successive multiplier was chosen adaptively. After each
+refit, we evaluated test RMSE, MAE, R², and MAPE. Only then decided whether a
+further, larger penalty was worth trying, since the effect of additional shrinkage on
+accuracy could not be anticipated in advance. This loop continued until a refit produced
+a simultaneous, meaningful change in RMSE, MAE, R², and MAPE relative to the
+preceding step, which we treated as the signal to stop further reduction.
 
-For classification of SPAI item 12, we additionally fit multinomial
-LASSO (`family = "multinomial"`) and refit a multinomial log-linear
-model on the selected predictors (post-LASSO) to improve class
-probabilities [@james2013]. Class imbalance in SPAI item 12 is evaluated
-with balanced accuracy and Cohen's $\kappa$ on the held-out test set.
+Model Selection: Every candidate model produced across both phases, not just the last
+one fit, were compared on test RMSE, MAE, R², and MAPE. The candidate with the
+strongest metrics overall was treated as the leading model. Where two or more
+candidates had near-equivalent metrics, we selected the most parsimonious of that
+group (i.e., the one with fewer predictors), on the reasoning that a simpler model is
+preferable when it sacrifices little to no measurable accuracy. Which candidate this rule
+selected, and its exact predictor count and performance metrics, are reported in the
+Results section.
+
+### Post-LASSO OLS on top predictors
+To assess how much predictive power could be retained with an even more minimal
+item set, we additionally identified, from the selected LASSO model, the five predictors
+with the largest absolute standardized coefficients, and refit that five-predictor subset
+using ordinary least squares (OLS) on the same train/test split. This follow-up analysis
+addresses a practical question distinct from model selection itself: how many survey
+items would be needed to approximate the full model's predictive accuracy in a short-
+form instrument. Which items were selected and how much variance they explained are
+reported in the Results section.
+
+
+
 
 ### Justification for this problem and data
 
-Our CAT item bank contains on the order of 100 item-level predictors
-that measure overlapping facets of problematic phone use [@gao2024].
-Pearson correlations among scale totals exceed $r = 0.64$ for several
-pairs (see Data Exploration), so multicollinearity is expected rather
-than exceptional. LASSO is well suited to high-dimensional, collinear
-psychological survey data because it stabilizes estimation and returns a
-sparse subset of items or scales that best predict addiction severity
-[@mcneish2015; @dalalyan2017]. Comparing plain and group LASSO,
-alongside `lambda.min` and `lambda.1se`, lets us balance predictive
-accuracy against interpretability—an important consideration when
-communicating results to clinicians and educators [@james2013;
-@huang2024].
+Our CAT item bank contains on the order of 100 item-level predictors that measure overlapping facets of problematic phone use [@gao2024]. Pearson correlations among scale totals exceed $r = 0.64$ for several pairs (see Data Exploration), so multicollinearity is expected rather than exceptional. LASSO is well suited to high-dimensional, collinear psychological survey data because it stabilizes estimation and returns a sparse subset of items or scales that best predict addiction severity [@mcneish2015; @dalalyan2017]. Comparing models reduced by `lambda.min` and `lambda.1se`, lets us balance predictive accuracy against interpretability—an important consideration when communicating results to clinicians and educators [@james2013; @huang2024].
 
 ## Analysis and Results
 
 ### Data Exploration and Visualization
 
-Data come from a Computer Adaptive Testing (CAT) item bank on
-problematic mobile phone use [@gao2024]. Respondents completed items
-from six instrument families—nomophobia (NMP), smartphone addiction
-proneness (SAPS), the Smartphone Addiction Inventory (SPAI) [@lin2014],
-the Mobile Phone Addiction Scale (MPAS), the Mobile Phone Addiction
-Tendency Scale (MPATS), and the Smartphone Addiction Scale (SAS-C and
-SAS-CA)—along with demographics (age, gender, grade). The raw file
-contains $n = 1{,}619$ respondents with complete records on all
-variables; no listwise missingness remains after filtering. Scale totals
-are computed as the sum of item scores within each instrument (higher
-totals indicate more problematic use, per the item bank codebook).
+Data come from a Computer Adaptive Testing (CAT) item bank on problematic mobile phone use [@gao2024]. Respondents completed items from six instrument families—nomophobia (NMP), smartphone addiction proneness (SAPS), the Smartphone Addiction Inventory (SPAI) [@lin2014], the Mobile Phone Addiction Scale (MPAS), the Mobile Phone Addiction Tendency Scale (MPATS), and the Smartphone Addiction Scale (SAS-C and SAS-CA)—along with demographics (age, gender, grade). The raw file contains $n = 1{,}619$ respondents with complete records on all variables; no listwise missingness remains after filtering. Scale totals are computed as the sum of item scores within each instrument (higher totals indicate more problematic use, per the item bank codebook).
 
-The sample is predominantly young adults (mean age $= 18.8$ years,
-$SD = 2.9$), with more female ($n = 991$) than male ($n = 628$)
-respondents. SPAI total—the primary outcome for regression—has mean
-$= 41.8$ ($SD = 10.2$) on the 20–80 scale, with a roughly symmetric
-distribution centered below the midpoint.
+The sample is predominantly young adults (mean age $= 18.8$ years, $SD = 2.9$), with more female ($n = 991$) than male ($n = 628$) respondents. SPAI total—the primary outcome for regression—has mean $= 41.8$ ($SD = 10.2$) on the 20–80 scale, with a roughly symmetric distribution centered below the midpoint.
 
 ```{r viz-setup, warning=FALSE, message=FALSE}
 library(tidyverse)
 library(knitr)
 library(patchwork)
 
-dat <- read.csv("data/DATA_Problematic Mobile Phone Use CAT.csv")
+dat <- read.csv("cellphone.csv")
 dat <- dat[complete.cases(dat), ]
 
 dat$NMP_total   <- rowSums(dat[, paste0("NMP_",   1:16)])
@@ -243,11 +170,7 @@ ggplot(dat, aes(x = SPAI_total)) +
   )
 ```
 
-Pearson correlations with SPAI total rank the predictor scales as
-follows: SAS ($r = 0.81$), SAPS ($r = 0.71$), MPATS ($r = 0.71$), MPAS
-($r = 0.65$), and NMP ($r = 0.55$). The scatter plot below shows the
-strongest of these relationships—SAS against SPAI total—with a strong
-linear trend and modest residual spread.
+Pearson correlations with SPAI total rank the predictor scales as follows: SAS ($r = 0.81$), SAPS ($r = 0.71$), MPATS ($r = 0.71$), MPAS ($r = 0.65$), and NMP ($r = 0.55$). The scatter plot below shows the strongest of these relationships—SAS against SPAI total—with a strong linear trend and modest residual spread.
 
 ```{r fig-scatter-sas, fig.cap="SAS total versus SPAI total with OLS trend line and 95% CI band."}
 ggplot(dat, aes(x = SAS_total, y = SPAI_total)) +
@@ -265,10 +188,7 @@ ggplot(dat, aes(x = SAS_total, y = SPAI_total)) +
   )
 ```
 
-All six scale totals move together (inter-scale $r$ often exceeds 0.60),
-confirming substantial **convergent validity** among instruments but
-also highlighting the multicollinearity that motivates LASSO
-regularization.
+All six scale totals move together (inter-scale $r$ often exceeds 0.60), confirming substantial **convergent validity** among instruments but also highlighting the multicollinearity that motivates LASSO regularization.
 
 ```{r fig-corr-heatmap, fig.cap="Pearson correlation heatmap among scale totals (complete cases)."}
 corr_cols <- c("NMP_total", "SAPS_total", "SPAI_total", "MPAS_total",
@@ -293,17 +213,7 @@ ggplot(corr_long, aes(x = Scale2, y = Scale1, fill = r)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-Two patterns warrant attention before modeling. First, **SPAI item 12**
-(perceived impact on study/work) is highly imbalanced: levels 1–4
-contain 262, 577, 688, and 92 responses respectively, so the rarest
-category is only $5.7\%$ of the sample—classification models must
-account for this skew. Second, although NMP shows the highest average
-endorsement when rescaled to a percentage of maximum ($= 68.8\%$), it
-correlates **weakest** with SPAI total among the five non-SPAI scales,
-hinting that nomophobia may be partially redundant once proneness (SAPS)
-and SAS symptoms are considered—a pattern consistent with preliminary
-LASSO results where NMP items are often zeroed out. The figure below
-summarizes the age and gender composition of the sample.
+Two patterns warrant attention before modeling. First, **SPAI item 12** (perceived impact on study/work) is highly imbalanced: levels 1–4 contain 262, 577, 688, and 92 responses respectively, so the rarest category is only $5.7\%$ of the sample—classification models must account for this skew. Second, although NMP shows the highest average endorsement when rescaled to a percentage of maximum ($= 68.8\%$), it correlates **weakest** with SPAI total among the five non-SPAI scales, hinting that nomophobia may be partially redundant once proneness (SAPS) and SAS symptoms are considered—a pattern consistent with preliminary LASSO results where NMP items are often zeroed out. The figure below summarizes the age and gender composition of the sample.
 
 ```{r fig-demographics, fig.cap="Age distribution and demographic breakdown (complete cases).", fig.width=10, fig.height=4}
 gender_labels <- c("1" = "Male", "2" = "Female")
@@ -322,40 +232,1343 @@ p_gender <- dat %>% count(gender_lab) %>%
 p_age + p_gender + plot_layout(widths = c(2, 1))
 ```
 
-Together, these exploratory plots motivate our modeling strategy: SPAI
-total is suitable as a continuous Gaussian outcome; the strong SAPS and
-SAS relationships suggest they will dominate LASSO selection; and the
-shared variance across scales justifies penalized regression over
-unregularized OLS [@james2013; @gao2024].
+Together, these exploratory plots motivate our modeling strategy: SPAI total is suitable as a continuous Gaussian outcome; the strong SAPS and SAS relationships suggest they will dominate LASSO selection; and the shared variance across scales justifies penalized regression over unregularized OLS [@james2013; @gao2024].
 
 ### Modeling and Results
 
 #### Data preprocessing
 
-We began with the raw CAT item bank file ($n = 1{,}619$ rows, 101
-variables) and retained only complete cases; no listwise missingness
-required exclusion. The primary outcome **SPAI total** was computed as
-the sum of 20 SPAI items. All other SPAI item columns were removed from
-the predictor matrix when modeling SPAI total to avoid circularity.
-Demographics (age, gender, grade) and item-level responses from NMP,
-SAPS, MPAS, MPATS, and SAS (SAS-C and SAS-CA) entered as predictors.
-Gender and grade were coded as factors; all item responses were treated
-as numeric. Predictors were assembled with a model matrix (no intercept
-column in the penalized fit). Respondents were split 80/20 into training
-and test sets using stratification on SPAI item 12
-(`caret::createDataPartition`) so that the imbalanced categorical
-outcome remained represented in both partitions; all continuous models
-below use the same split.
+We began with the raw CAT item bank file ($n = 1{,}619$ rows, 101 variables) and retained only complete cases; no listwise missingness required exclusion. The primary outcome **SPAI total** was computed as the sum of 20 SPAI items. All other SPAI item columns were removed from the predictor matrix when modeling SPAI total to avoid circularity. Demographics (age, gender, grade) and item-level responses from NMP, SAPS, MPAS, MPATS, and SAS (SAS-C and SAS-CA) entered as predictors. Gender and grade were coded as factors; all item responses were treated as numeric. Predictors were assembled with a model matrix (no intercept column in the penalized fit). Respondents were split 80/20 into training and test sets. All continuous models below use the same split.
+
+```{r}
+#| echo: false
+#| fig-width: 8
+#| fig-height: 5
+#| fig-align: center
+#
+
+library(glmnet)
+library(dplyr)
+
+###################################################
+#
+#      Reduces from full model if 81 Variables down to 52 using Lasso Lambda.min
+#
+##################################################
+
+
+# ===============================
+# 1. LOAD DATA
+# ===============================
+cells_data <- read.csv("cellphone.csv", header = TRUE)
+
+# ===============================
+# 2. CLEAN GRADE and Gender
+# ===============================
+grade_map <- c(
+  "1" = "F", "2" = "Sph", "3" = "J", "4" = "Sen", 
+  "5" = "M1", "6" = "M2", "7" = "M3", "8" = "Doc", 
+  "12" = "8th", "13" = "9th", "14" = "10th", "15" = "11th", "16" = "12th"
+)
+cells_data$grade <- factor(grade_map[as.character(cells_data$grade)])
+
+# ADD THIS LINE TO FIX GENDER:
+cells_data$gender <- factor(cells_data$gender)
+
+# ===============================
+# 3. DEFINE OUTCOME (TOTAL SPAI ADDICTION)
+# ===============================
+# Generate names for all 20 SPAI items
+spai_all <- paste0("SPAI_", 1:20)
+
+# Convert all 20 columns to numeric
+cells_data[spai_all] <- lapply(cells_data[spai_all], function(x) as.numeric(as.character(x)))
+
+# MODIFIED: Calculate the sum of ALL 20 SPAI variables
+cells_data$sum_SPAI <- rowSums(cells_data[, spai_all], na.rm = TRUE)
+
+# MODIFIED: Set sum_SPAI as the new dependent variable
+y <- cells_data$sum_SPAI
+
+# ===============================
+# 4. PREDICTORS (NO SPAI LEAKAGE)
+# ===============================
+# MODIFIED: Drop the new target variable (sum_SPAI) and all individual SPAI columns 
+x <- cells_data %>% dplyr::select(-sum_SPAI, -all_of(spai_all))
+
+# Safety check: Ensure no lingering SPAI or target columns exist in your predictors
+stopifnot(!any(grepl("SPAI", names(x))))
+
+# ===============================
+# 5. FIXED: MODEL MATRIX BEFORE SPLIT
+# ===============================
+x_full_mat <- model.matrix(~ . - 1, data = x)
+
+# ===============================
+# 6. TRAIN / TEST SPLIT
+# ===============================
+set.seed(123)
+n <- nrow(x_full_mat)
+train_index <- sample(1:n, size = 0.8 * n)
+
+x_train_mat <- x_full_mat[train_index, ]
+x_test_mat  <- x_full_mat[-train_index, ]
+y_train     <- y[train_index]
+y_test      <- y[-train_index]
+
+# ===============================
+# 7. LASSO (TRAIN ONLY)
+# ===============================
+set.seed(123)
+cv_lasso <- cv.glmnet(
+  x = x_train_mat, y = y_train, 
+  alpha = 1, family = "gaussian", nfolds = 10
+)
+
+# ===============================
+# 8. TRAIN VS TEST EVALUATION (UPDATED WITH NMAE & MAPE)
+# ===============================
+pred_train <- as.numeric(predict(cv_lasso, s = "lambda.min", newx = x_train_mat))
+pred_test  <- as.numeric(predict(cv_lasso, s = "lambda.min", newx = x_test_mat))
+
+rmse_train <- sqrt(mean((y_train - pred_train)^2))
+mae_train  <- mean(abs(y_train - pred_train))
+r2_train   <- 1 - (sum((y_train - pred_train)^2) / sum((y_train - mean(y_train))^2))
+
+rmse_test  <- sqrt(mean((y_test - pred_test)^2))
+mae_test   <- mean(abs(y_test - pred_test))
+r2_test    <- 1 - (sum((y_test - pred_test)^2) / sum((y_test - mean(y_test))^2))
+
+# FIXED: Removed the duplicate uncorrected line beneath this one
+cv_rmse    <- sqrt(cv_lasso$cvm[cv_lasso$lambda == cv_lasso$lambda.min])
+
+# ADDED: Calculation for Scale-Agnostic Percentage Metrics 
+range_y_test   <- max(y_test) - min(y_test)
+norm_mae_test  <- (mae_test / range_y_test) * 100
+mape_test      <- mean(abs((y_test - pred_test) / y_test)) * 100
+
+
+# ==============================================================================
+# ADDITIONAL CODE: PLOT FIT AND EXTRACT TOP PREDICTORS (TOTAL SPAI MODEL)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. VISUALIZE MODEL FIT (ACTUAL VS. PREDICTED)
+# ------------------------------------------------------------------------------
+plot_data <- data.frame(
+  Actual = y_test,
+  Predicted = pred_test
+)
+# Determine coordinate boundaries for a perfectly square 1:1 plot
+min_val <- min(c(plot_data$Actual, plot_data$Predicted), na.rm = TRUE)
+max_val <- max(c(plot_data$Actual, plot_data$Predicted), na.rm = TRUE)
+
+plot(
+  x = plot_data$Actual, 
+  y = plot_data$Predicted,
+  xlab = "Actual Total SPAI Score",
+  ylab = "Predicted Total SPAI Score",
+  pch = 16,
+  col = rgb(0.2, 0.4, 0.6, 0.5),
+  xlim = c(min_val, max_val),
+  ylim = c(min_val, max_val)
+)
+
+abline(a = 0, b = 1, col = "red", lty = 2, lwd = 2)
+
+legend(
+  "topleft",
+  legend = "Perfect Prediction Line",
+  col = "red",
+  lty = 2,
+  lwd = 2
+)
+```
+
+The figure shows predicted versus actual Total SPAI scores from a 10-fold cross-validated LASSO regression model. The model began with 81 candidate predictors and retained 52 predictors using the lambda-min penalty. The dashed reference line represents perfect prediction.  There is a strong positive linear correlation and a good fit with test RMSE = 5.1702, test MAE = 3.9714 and test MAPE = 10.58 percent.  The optimal lambda = 0.074363.
+
+Lasso regression was preformed one more time on the remaining 52 variables using lambda.min again.  Even though the optimal lambda for this model is 0.020216, no variables were dropped which shows that the remaining variables have sufficient information to contribute to the model such that lambda.min will not eliminate any additional variables.  The test RMSE = 5.2142, test MAE = 3.9902 and the test MAPE = 10.6 percent.  Because this is the best that lambda.min can do and because there are still 52 variables being used as predictors, lambda.1se will be used to reduce the model even further.  
+
+Lambda.min is the exact value of $\lambda$ that results in the lowest possible mean squared error (MSE) during cross-validation.  The goal of lambda.min is to maximize the prediction accuracy which means that it is less aggressive at dropping variables.  Thus variables with noise or little contribution to the model will often remain in the model leading to a large and often complex model.  Since the focus of Lasso Regression is to minimize the number of predictor variables while maintaining accuracy, lambda.1se was used for the next reduction.  Lambda.1se is the largest value of $\lambda$ whose cross-validation error is still within one standard error of the absolute minimum error.  This will force more variables that have minimum contribution to the model to be dropped and yielding a simpler model that gives similar results to lambda.min.  
+
+Using lambda.1se = 0.227095 reduced the model from 52 predictor variables down to 33 predictor variables.  That is a 19 variable drop in the model which is the exact goal of Lasso Regression.  While this Lasso created a simpler, less complex model, the test RMSE improved slightly to 5.1626; the test R2 improved slightly to 0.7498 and the Normalized Test MAE remained unchanged through this reduction.  Based on this information, this is the best performing model yet and it is the least complex model so far as it has the lowest number of predictor variables.  
+
+Another Lasso Regression was preformed to see if there are still predictors that can be removed without sacrificing the accuracy of the model.  This time the lambda used was 1.75*lambda.1se which forces even more predictor variables to zero.  With this penalty, the model was reduced from 33 predictors down to 28 predictors.  The test RMSE increased slightly to 5.2553, the test MAE slightly increased to 4.1075 and the test MAPE = 11.21 percent.  The optimal lambda is 0.576584.  Even though there was a slight increase in the test RMSE and MAE, another Lasso was performed to evaluate the number of variables that would be reduced at the cost of losing accuracy.
+
+This sixth Lasso Regression brought the total variables down to 22.  While the test RMSE, test MAE and test MAPE all had slight increases, this was not sufficient to stop another Lasso Regression as the simplest model with the best accuracy is the objective.  The lambda for the sixth Lasso Regression is 1.195034, test RMSE = 5.5280, test MAE = 4.1075 which is unchanged from the last lasso and test MAPE = 12.14.
+
+The seventh Lasso Regression reduced the model from 22 predictor variables to 19 predictor variables but the most important change was in the R2 value which dropped below 70% on the test data for the first time.  Due to the drop of R2 and the increase in the test RMSE, test MAE and test MAPE, the threshold benefit of dropping variables at the cost of accuracy has been reached and no more reduction of predictor variables will be done on the model.  Here is the summary table of all of the models:
+
+```{r}
+# ------------------------------------------------------------------------------
+# 2. EXTRACT AND CLEAN TOP PREDICTORS
+# ------------------------------------------------------------------------------
+# Extract Lasso coefficients at the optimal lambda (lambda.min)
+coef_lasso <- coef(cv_lasso, s = "lambda.min")
+
+# Convert to a clean matrix format
+coef_matrix <- as.matrix(coef_lasso)
+coef_df <- data.frame(
+  Dummy_Variable = rownames(coef_matrix),
+  Coefficient = coef_matrix[, 1],
+  Absolute_Impact = abs(coef_matrix[, 1]),
+  stringsAsFactors = FALSE
+)
+
+# Remove the Intercept and filter to only selected features (non-zero)
+selected_features <- coef_df %>%
+  filter(Dummy_Variable != "(Intercept)", Coefficient != 0) %>%
+  arrange(desc(Absolute_Impact))
+
+# Combine everything into a clean presentation table with exact string matching
+first_top_predictors <- selected_features %>%
+  rowwise() %>%
+  mutate(Original_Variable = {
+    # Find which original column names match the start of the dummy name
+    matches <- names(x)[sapply(names(x), function(orig) grepl(paste0("^", orig), Dummy_Variable))]
+    # Pick the longest match to avoid sub-string confusion
+    if(length(matches) > 0) matches[which.max(nchar(matches))] else Dummy_Variable
+  }) %>%
+  ungroup() %>%
+  dplyr::select(Original_Variable, Dummy_Variable, Coefficient)
+
+
+# MODIFIED: Saved with a unique filename specific to this new total SPAI outcome
+write.csv(first_top_predictors, "total_spai_first_predictors.csv", row.names = FALSE)
+
+
+
+
+# ===============================
+# 9. OUTPUT RESULTS TABLE (UPDATED HORIZONTAL LAYOUT)
+# ===============================
+# 1. Build the base vertical results data frame
+results_vertical <- data.frame(
+  Metric = c("RMSE", "MAE", "R-Squared"),
+  Train  = c(round(rmse_train, 4), round(mae_train, 4), round(r2_train, 4)),
+  Test   = c(round(rmse_test, 4), round(mae_test, 4), round(r2_test, 4))
+)
+
+# 2. Transpose the metrics to make them columns and include scale-agnostic metrics
+results_horizontal <- data.frame(
+  Model = "First_Lasso_Reduction",
+  OVR = length(unique(first_top_predictors$Original_Variable)),
+  `Train RMSE` = results_vertical[1, "Train"],
+  `Test RMSE`  = results_vertical[1, "Test"],
+  `Train MAE`   = results_vertical[2, "Train"],
+  `Test MAE`    = results_vertical[2, "Test"],
+  `Train R-Squared` = results_vertical[3, "Train"],
+  `Test R-Squared`  = results_vertical[3, "Test"],
+  `Test Norm MAE (%)` = round(norm_mae_test, 2),
+  `Test MAPE (%)`     = round(mape_test, 2),
+  `Optimal Lambda`    = round(cv_lasso$lambda.min, 6), # ADDED: Lambda column
+  check.names = FALSE
+)
+
+
+# ==============================================================================
+# DISPLAY MODEL SIZE AND TOP 5 PREDICTOR VARIABLES
+# ==============================================================================
+# Calculate the count of unique original variables with non-zero coefficients
+total_surviving_vars <- length(unique(first_top_predictors$Original_Variable))
+
+
+####################################################################
+###############################################################################
+#
+#       Second Lasso  lambda.min again on 52 to modify coefficients and still has 52 after this run
+#
+###############################################################################
+####################################################################
+
+
+# ==============================================================================
+# 1. EXTRACT SELECTED VARIABLE NAMES (REMOVING DUMMY FACTOR SUFFIXES)
+# ==============================================================================
+# Get unique names of the original variables that survived the first round
+remaining_vars <- unique(first_top_predictors$Original_Variable)
+
+# ==============================================================================
+# 2. SUBSET THE ORIGINAL X PREDICTORS
+# ==============================================================================
+# Create a new predictor dataframe containing only the surviving variables
+x_reduced <- cells_data %>% dplyr::select(all_of(remaining_vars))
+
+# ==============================================================================
+# 3. GENERATE NEW MODEL MATRIX & SPLIT DATA
+# ==============================================================================
+x_reduced_mat <- model.matrix(~ . - 1, data = x_reduced)
+
+# Re-use the exact same training indexes from your first split for consistency
+x_train_mat2 <- x_reduced_mat[train_index, ]
+x_test_mat2  <- x_reduced_mat[-train_index, ]
+# Note: y_train and y_test remain exactly the same as your sum_SPAI vectors
+
+# ==============================================================================
+# 4. RUN SECOND LASSO MODEL
+# ==============================================================================
+set.seed(123) # Reset seed for reproducibility in cross-validation folds
+cv_lasso2 <- cv.glmnet(
+  x = x_train_mat2, y = y_train, 
+  alpha = 1, family = "gaussian", nfolds = 10
+)
+
+# ==============================================================================
+# 6. EXTRACT, CLEAN, AND SAVE SECOND REDUCTION VARIABLES
+#    (MOVED UP: Must create 'second_top_predictors' before evaluating performance)
+# ==============================================================================
+coef_lasso2  <- coef(cv_lasso2, s = "lambda.min")
+coef_matrix2 <- as.matrix(coef_lasso2)
+
+coef_df2 <- data.frame(
+  Dummy_Variable = rownames(coef_matrix2),
+  Coefficient = coef_matrix2[, 1],
+  Absolute_Impact = abs(coef_matrix2[, 1]),
+  stringsAsFactors = FALSE
+)
+
+selected_features2 <- coef_df2 %>%
+  filter(Dummy_Variable != "(Intercept)", Coefficient != 0) %>%
+  arrange(desc(Absolute_Impact))
+
+second_top_predictors <- selected_features2 %>%
+  rowwise() %>%
+  mutate(Original_Variable = {
+    matches <- names(x_reduced)[sapply(names(x_reduced), function(orig) grepl(paste0("^", orig), Dummy_Variable))]
+    if(length(matches) > 0) matches[which.max(nchar(matches))] else Dummy_Variable
+  }) %>%
+  ungroup() %>%
+  dplyr::select(Original_Variable, Dummy_Variable, Coefficient)
+
+
+# Saved with a unique filename specific to this second total SPAI reduction
+write.csv(second_top_predictors, "total_spai_second_predictors.csv", row.names = FALSE)
+
+# ==============================================================================
+# 5. EVALUATE SECOND MODEL PERFORMANCE (UPDATED WITH NMAE, MAPE, & LAMBDA)
+# ==============================================================================
+pred_train2 <- as.numeric(predict(cv_lasso2, s = "lambda.min", newx = x_train_mat2))
+pred_test2  <- as.numeric(predict(cv_lasso2, s = "lambda.min", newx = x_test_mat2))
+
+# Compute baseline metrics for vertical extraction
+mae_train2      <- mean(abs(y_train - pred_train2)) # ADDED FOR MASTER TABLE CONSISTENCY
+mae_test2       <- mean(abs(y_test - pred_test2))
+range_y_test    <- max(y_test) - min(y_test)
+norm_mae_test2  <- (mae_test2 / range_y_test) * 100
+mape_test2      <- mean(abs((y_test - pred_test2) / y_test)) * 100
+lambda_used2    <- cv_lasso2$lambda.min
+
+# 1. Build the base vertical results data frame
+results2_vertical <- data.frame(
+  Metric = c("RMSE", "MAE", "R-Squared"),
+  Train  = c(round(sqrt(mean((y_train - pred_train2)^2)), 4), round(mae_train2, 4), round(1 - (sum((y_train - pred_train2)^2) / sum((y_train - mean(y_train))^2)), 4)),
+  Test   = c(round(sqrt(mean((y_test - pred_test2)^2)), 4), round(mae_test2, 4), round(1 - (sum((y_test - pred_test2)^2) / sum((y_test - mean(y_test))^2)), 4))
+)
+
+# 2. Transpose the metrics to make them columns with the correct OVR mapping
+results2_horizontal <- data.frame(
+  Model = "Second_Lasso_Reduction",
+  OVR = length(unique(second_top_predictors$Original_Variable)),
+  `Train RMSE` = results2_vertical[1, "Train"],
+  `Test RMSE`  = results2_vertical[1, "Test"],
+  `Train MAE`   = results2_vertical[2, "Train"],
+  `Test MAE`    = results2_vertical[2, "Test"],
+  `Train R-Squared` = results2_vertical[3, "Train"],
+  `Test R-Squared`  = results2_vertical[3, "Test"],
+  `Test Norm MAE (%)` = round(norm_mae_test2, 2), 
+  `Test MAPE (%)`     = round(mape_test2, 2),     
+  `Optimal Lambda`    = round(lambda_used2, 6),   
+  check.names = FALSE
+)
+
+
+#------------------------------------------------------------------
+#   Comparison Tables Code
+#------------------------------------------------------------------
+
+# ==============================================================================
+# 1. CALCULATE VARIABLE COUNTS FOR EACH STAGE
+# ==============================================================================
+initial_var_count <- ncol(x)
+first_var_count   <- length(unique(first_top_predictors$Original_Variable))
+second_var_count  <- length(unique(second_top_predictors$Original_Variable))
+
+# ==============================================================================
+# 2. RUN BASELINE MULTIPLE LINEAR REGRESSION (FOR COMPARISON PERFORMANCE)
+# ==============================================================================
+baseline_model <- lm(y_train ~ ., data = as.data.frame(x_train_mat))
+
+pred_train_base <- predict(baseline_model, newdata = as.data.frame(x_train_mat))
+pred_test_base  <- predict(baseline_model, newdata = as.data.frame(x_test_mat))
+
+# Baseline metrics (and new context variables)
+rmse_tr_b  <- sqrt(mean((y_train - pred_train_base)^2, na.rm=TRUE))
+rmse_te_b  <- sqrt(mean((y_test - pred_test_base)^2, na.rm=TRUE))
+mae_tr_b   <- mean(abs(y_train - pred_train_base), na.rm=TRUE) # ADDED
+mae_te_b   <- mean(abs(y_test - pred_test_base), na.rm=TRUE)
+r2_tr_b    <- 1 - (sum((y_train - pred_train_base)^2, na.rm=TRUE) / sum((y_train - mean(y_train))^2))
+r2_te_b    <- 1 - (sum((y_test - pred_test_base)^2, na.rm=TRUE) / sum((y_test - mean(y_test))^2))
+norm_mae_b <- (mae_te_b / range_y_test) * 100
+mape_b     <- mean(abs((y_test - pred_test_base) / y_test), na.rm=TRUE) * 100
+
+# ==============================================================================
+# 3. CONSTRUCT THE MASTER COMPARISON TABLE (UPDATED FOR ALL METRICS)
+# ==============================================================================
+master_comparison <- data.frame(
+  Metric = c(
+    "OVR", 
+    "Train RMSE", 
+    "Test RMSE", 
+    "Train MAE",         # ADDED
+    "Test MAE",          # ADDED
+    "Train R-Squared", 
+    "Test R-Squared",
+    "Test Norm MAE (%)", 
+    "Test MAPE (%)",     
+    "Optimal Lambda"     
+  ),
+  Baseline_Full_Model = c(
+    initial_var_count, 
+    round(rmse_tr_b, 4), 
+    round(rmse_te_b, 4), 
+    round(mae_tr_b, 4),  # ADDED
+    round(mae_te_b, 4),  # ADDED
+    round(r2_tr_b, 4), 
+    round(r2_te_b, 4),
+    round(norm_mae_b, 2), 
+    round(mape_b, 2),     
+    NA                    
+  ),
+  First_Lasso_Reduction = c(
+    first_var_count, 
+    round(rmse_train, 4), 
+    round(rmse_test, 4), 
+    round(mae_train, 4),  # ADDED (Assumed variables exist from step 1)
+    round(mae_test, 4),   # ADDED
+    round(r2_train, 4), 
+    round(r2_test, 4),
+    round(norm_mae_test, 2),
+    round(mape_test, 2),
+    round(cv_lasso$lambda.min, 6)
+  ),
+  Second_Lasso_Reduction = c(
+    second_var_count, 
+    round(sqrt(mean((y_train - pred_train2)^2)), 4), 
+    round(sqrt(mean((y_test - pred_test2)^2)), 4), 
+    round(mae_train2, 4), # ADDED
+    round(mae_test2, 4),  # ADDED
+    round(1 - (sum((y_train - pred_train2)^2) / sum((y_train - mean(y_train))^2)), 4), 
+    round(1 - (sum((y_test - pred_test2)^2) / sum((y_test - mean(y_test))^2)), 4),
+    round(norm_mae_test2, 2),
+    round(mape_test2, 2),
+    round(lambda_used2, 6)
+  ),
+  stringsAsFactors = FALSE
+)
+
+# ==============================================================================
+# 4. TRANSPOSE, PRINT, AND SAVE THE SUMMARY TABLE
+# ==============================================================================
+# Clean transposition keeping matrix string issues isolated
+transposed_comparison <- as.data.frame(t(master_comparison[, -1]), check.names = FALSE)
+colnames(transposed_comparison) <- master_comparison$Metric
+
+transposed_comparison <- data.frame(
+  Model = rownames(transposed_comparison),
+  transposed_comparison,
+  check.names = FALSE
+)
+
+# Strip default sequence index numbering from print layout
+row.names(transposed_comparison) <- NULL
+
+
+write.csv(transposed_comparison, "total_spai_master_comparison_transposed.csv", row.names = FALSE)
+
+
+
+
+#______________________________________________________________________________________
+#######################################################################################
+#
+#
+#  New Lasso to actually do a second reduction  Modified lambda to lambda.1se Reduces from 52 to 33
+#
+#
+#######################################################################################
+#______________________________________________________________________________________
+
+
+
+
+# ==============================================================================
+# 0. MEMORY RESET: TRUNCATE TABLE TO THE INITIAL 3 MODELS BEFORE APPENDING
+# ==============================================================================
+# CORRECTED: Ensures the matrix object clears any downstream models cleanly
+if(exists("master_comparison")) {
+  master_comparison <- master_comparison[, 1:4]
+}
+
+# ==============================================================================
+# 1. EXTRACT COEFFICIENTS AND COUNT VARIABLES FOR LAMBDA.1SE
+# ==============================================================================
+# Extract Lasso coefficients using the stricter 1-standard-error rule
+coef_lasso_1se  <- coef(cv_lasso, s = "lambda.1se")
+coef_matrix_1se <- as.matrix(coef_lasso_1se)
+
+coef_df_1se <- data.frame(
+  Dummy_Variable = rownames(coef_matrix_1se),
+  Coefficient = coef_matrix_1se[, 1],
+  Absolute_Impact = abs(coef_matrix_1se[, 1]),
+  stringsAsFactors = FALSE
+)
+
+# Filter out the intercept and zeroed-out variables
+selected_features_1se <- coef_df_1se %>%
+  filter(Dummy_Variable != "(Intercept)", Coefficient != 0)
+
+# Clean variable names to count unique original variables
+top_predictors_1se <- selected_features_1se %>%
+  rowwise() %>%
+  mutate(Original_Variable = {
+    matches <- names(x)[sapply(names(x), function(orig) grepl(paste0("^", orig), Dummy_Variable))]
+    if(length(matches) > 0) matches[which.max(nchar(matches))] else Dummy_Variable
+  }) %>%
+  ungroup()
+
+se1_var_count <- length(unique(top_predictors_1se$Original_Variable))
+
+# ==============================================================================
+# 2. EVALUATE LAMBDA.1SE MODEL PERFORMANCE (FIXED: COMPUTING ALL REQUIRED METRICS)
+# ==============================================================================
+# Generate predictions using the 1se penalty strength
+pred_train_1se <- as.numeric(predict(cv_lasso, s = "lambda.1se", newx = x_train_mat))
+pred_test_1se  <- as.numeric(predict(cv_lasso, s = "lambda.1se", newx = x_test_mat))
+
+# Compute metrics
+rmse_tr_1se   <- sqrt(mean((y_train - pred_train_1se)^2))
+rmse_te_1se   <- sqrt(mean((y_test - pred_test_1se)^2))
+mae_tr_1se    <- mean(abs(y_train - pred_train_1se))
+mae_te_1se    <- mean(abs(y_test - pred_test_1se))
+r2_tr_1se     <- 1 - (sum((y_train - pred_train_1se)^2) / sum((y_train - mean(y_train))^2))
+r2_te_1se     <- 1 - (sum((y_test - pred_test_1se)^2) / sum((y_test - mean(y_test))^2))
+
+# Compute new horizontal metrics for the 1se model
+range_y_test      <- max(y_test) - min(y_test)
+norm_mae_test_1se <- (mae_te_1se / range_y_test) * 100
+mape_test_1se     <- mean(abs((y_test - pred_test_1se) / y_test)) * 100
+
+# ==============================================================================
+# 3. CONSTRUCT THE MASTER COMPARISON TABLE (FIXED VARIABLES SYNCHRONIZATION)
+# ==============================================================================
+master_comparison <- data.frame(
+  Metric = c(
+    "OVR", 
+    "Train RMSE", 
+    "Test RMSE", 
+    "Train MAE",         
+    "Test MAE",          
+    "Train R-Squared", 
+    "Test R-Squared",
+    "Test Norm MAE (%)", 
+    "Test MAPE (%)",     
+    "Optimal Lambda"     
+  ),
+  Baseline_Full_Model = c(
+    initial_var_count, 
+    round(rmse_tr_b, 4), 
+    round(rmse_te_b, 4), 
+    round(mae_tr_b, 4),  
+    round(mae_te_b, 4),  
+    round(r2_tr_b, 4), 
+    round(r2_te_b, 4),
+    round(norm_mae_b, 2), 
+    round(mape_b, 2),     
+    NA                    
+  ),
+  First_Lasso_Reduction = c(
+    first_var_count, 
+    round(rmse_train, 4), 
+    round(rmse_test, 4), 
+    round(mae_train, 4),  
+    round(mae_test, 4),   
+    round(r2_train, 4), 
+    round(r2_test, 4),
+    round(norm_mae_test, 2),
+    round(mape_test, 2),
+    round(cv_lasso$lambda.min, 6)
+  ),
+  Second_Lasso_Reduction = c(
+    second_var_count, 
+    round(sqrt(mean((y_train - pred_train2)^2)), 4), 
+    round(sqrt(mean((y_test - pred_test2)^2)), 4), 
+    round(mae_train2, 4), 
+    round(mae_test2, 4),  
+    round(1 - (sum((y_train - pred_train2)^2) / sum((y_train - mean(y_train))^2)), 4), 
+    round(1 - (sum((y_test - pred_test2)^2) / sum((y_test - mean(y_test))^2)), 4),
+    round(norm_mae_test2, 2),
+    round(mape_test2, 2),
+    round(lambda_used2, 6)
+  ),
+  Lambda_1se_Parsimonious = c(
+    se1_var_count,                                                  # OVR
+    round(rmse_tr_1se, 4),                                          # Train RMSE
+    round(rmse_te_1se, 4),                                          # Test RMSE
+    round(mae_tr_1se, 4),                                           # Train MAE
+    round(mae_te_1se, 4),                                           # Test MAE
+    round(r2_tr_1se, 4),                                            # Train R-Squared
+    round(r2_te_1se, 4),                                            # Test R-Squared
+    round(norm_mae_test_1se, 2),                                    # Test Norm MAE (%)
+    round(mape_test_1se, 2),                                        # Test MAPE (%)
+    round(cv_lasso$lambda.1se, 6)                                   # Optimal Lambda (1se)
+  ),
+  stringsAsFactors = FALSE
+)
+
+# ==============================================================================
+# 4. TRANSPOSE, PRINT, AND SAVE THE SUMMARY TABLE
+# ==============================================================================
+transposed_comparison <- as.data.frame(t(master_comparison[, -1]), check.names = FALSE)
+colnames(transposed_comparison) <- master_comparison$Metric
+
+transposed_comparison <- data.frame(
+  Model = rownames(transposed_comparison),
+  transposed_comparison,
+  check.names = FALSE
+)
+
+# Ensure numeric columns print correctly and don't convert back to raw characters
+transposed_comparison[, 2:ncol(transposed_comparison)] <- lapply(
+  transposed_comparison[, 2:ncol(transposed_comparison)], 
+  function(x) as.numeric(as.character(x))
+)
+
+row.names(transposed_comparison) <- NULL
+
+
+
+write.csv(transposed_comparison, "total_spai_master_comparison_transposed.csv", row.names = FALSE)
+
+
+#-----------------------------------------------------------------------------------------------------
+
+#####################################################################################################
+######################################################################################################
+#
+#      Third Lasso Reduction  Modified Lambda = 1.75Lambda.1se  Reduces from 33 to 28 
+#
+#####################################################################################################
+#####################################################################################################
+
+
+
+# ==============================================================================
+# 0. ENVIRONMENT RESET: TRUNCATE TABLE TO THE INITIAL 4 MODELS BEFORE APPENDING
+# ==============================================================================
+# Clears out any lingering downstream models from your active R workspace session
+if(exists("master_comparison")) {
+  master_comparison <- master_comparison[, 1:5]
+}
+
+# ==============================================================================
+# 1. EXTRACT THE SURVIVING VARIABLES FROM THE 1SE MODEL
+# ==============================================================================
+# Dynamically reads the variable count from your 1se total SPAI model
+vars_1se <- unique(top_predictors_1se$Original_Variable)
+x_strict_df <- cells_data %>% dplyr::select(all_of(vars_1se))
+x_strict_mat <- model.matrix(~ . - 1, data = x_strict_df)
+
+# Align with your original training and testing splits
+x_train_strict <- x_strict_mat[train_index, ]
+x_test_strict  <- x_strict_mat[-train_index, ]
+
+# ==============================================================================
+# 2. RUN A HIGH-PENALTY LASSO CORRECTION
+# ==============================================================================
+set.seed(123)
+cv_strict <- cv.glmnet(
+  x = x_train_strict, y = y_train, 
+  alpha = 1, family = "gaussian", nfolds = 10
+)
+
+# Manually amplify the 1se lambda by 1.75x to force aggressive variable dropping
+strict_lambda <- cv_strict$lambda.1se * 1.75
+
+# ==============================================================================
+# 3. EXTRACT AND CLEAN THE ULTRA-REDUCED PREDICTORS
+# ==============================================================================
+coef_strict  <- coef(cv_strict, s = strict_lambda)
+matrix_strict <- as.matrix(coef_strict)
+
+df_strict <- data.frame(
+  Dummy_Variable = rownames(matrix_strict),
+  Coefficient = matrix_strict[, 1],
+  Absolute_Impact = abs(matrix_strict[, 1]),
+  stringsAsFactors = FALSE
+)
+
+selected_strict <- df_strict %>%
+  filter(Dummy_Variable != "(Intercept)", Coefficient != 0) %>%
+  arrange(desc(Absolute_Impact))
+
+strict_top_predictors <- selected_strict %>%
+  rowwise() %>%
+  mutate(Original_Variable = {
+    matches <- names(x_strict_df)[sapply(names(x_strict_df), function(orig) grepl(paste0("^", orig), Dummy_Variable))]
+    if(length(matches) > 0) matches[which.max(nchar(matches))] else Dummy_Variable
+  }) %>%
+  ungroup() %>%
+  dplyr::select(Original_Variable, Dummy_Variable, Coefficient)
+
+strict_var_count <- length(unique(strict_top_predictors$Original_Variable))
+
+# ==============================================================================
+# 4. EVALUATE STRICT MODEL PERFORMANCE (UPDATED FOR NEW METRICS)
+# ==============================================================================
+pred_train_st <- as.numeric(predict(cv_strict, s = strict_lambda, newx = x_train_strict))
+pred_test_st  <- as.numeric(predict(cv_strict, s = strict_lambda, newx = x_test_strict))
+
+# Core Error Metrics
+rmse_tr_st <- sqrt(mean((y_train - pred_train_st)^2))
+rmse_te_st <- sqrt(mean((y_test - pred_test_st)^2))
+mae_tr_st  <- mean(abs(y_train - pred_train_st))
+mae_te_st  <- mean(abs(y_test - pred_test_st))
+r2_tr_st   <- 1 - (sum((y_train - pred_train_st)^2) / sum((y_train - mean(y_train))^2))
+r2_te_st   <- 1 - (sum((y_test - pred_test_st)^2) / sum((y_test - mean(y_test))^2))
+
+# Horizontal Context Metrics (ADDED)
+range_y_test     <- max(y_test) - min(y_test)
+norm_mae_test_st <- (mae_te_st / range_y_test) * 100
+mape_test_st     <- mean(abs((y_test - pred_test_st) / y_test)) * 100
+
+# ==============================================================================
+# 5. APPEND, TRANSPOSE, AND PRINT HORIZONTAL COMPARISON
+# ==============================================================================
+# Append all 10 metrics cleanly to match master dataframe dimensions
+master_comparison$Strict_Hyper_Parsimonious <- c(
+  strict_var_count,             # OVR
+  round(rmse_tr_st, 4),         # Train RMSE
+  round(rmse_te_st, 4),         # Test RMSE
+  round(mae_tr_st, 4),          # Train MAE
+  round(mae_te_st, 4),          # Test MAE
+  round(r2_tr_st, 4),           # Train R-Squared
+  round(r2_te_st, 4),           # Test R-Squared
+  round(norm_mae_test_st, 2),   # Test Norm MAE (%)
+  round(mape_test_st, 2),       # Test MAPE (%)
+  round(strict_lambda, 6)       # Optimal Lambda
+)
+
+# Run transposition logic immediately within the execution sequence
+transposed_comparison <- as.data.frame(t(master_comparison[, -1]), check.names = FALSE)
+colnames(transposed_comparison) <- master_comparison$Metric
+
+transposed_comparison <- data.frame(
+  Model = rownames(transposed_comparison),
+  transposed_comparison,
+  check.names = FALSE
+)
+
+# Keep formatting clean across numeric properties
+transposed_comparison[, 2:ncol(transposed_comparison)] <- lapply(
+  transposed_comparison[, 2:ncol(transposed_comparison)], 
+  function(x) as.numeric(as.character(x))
+)
+
+row.names(transposed_comparison) <- NULL
+
+
+# Save the updated transposed spreadsheet version to your working files
+write.csv(transposed_comparison, "total_spai_master_comparison_transposed.csv", row.names = FALSE)
+write.csv(strict_top_predictors, "total_spai_strict_predictors.csv", row.names = FALSE)
+
+
+
+######################################################################
+#
+#
+#   I am going to do a fourth reduction  from 28 to 22 Variables.
+#
+#
+######################################################################
+#
+
+# ==============================================================================
+# 0. MEMORY RESET: TRUNCATE TABLE TO THE INITIAL 5 MODELS BEFORE APPENDING
+# ==============================================================================
+# Clears out any lingering downstream terminal models from your active R session
+if(exists("master_comparison")) {
+  master_comparison <- master_comparison[, 1:6]
+}
+
+# ==============================================================================
+# 1. EXTRACT THE 28 VARIABLES FROM THE PREVIOUS STRICT MODEL
+# ==============================================================================
+vars_strict_28 <- unique(strict_top_predictors$Original_Variable)
+x_ultra_df     <- cells_data %>% dplyr::select(all_of(vars_strict_28))
+x_ultra_mat    <- model.matrix(~ . - 1, data = x_ultra_df)
+
+x_train_ultra <- x_ultra_mat[train_index, ]
+x_test_ultra  <- x_ultra_mat[-train_index, ]
+
+# ==============================================================================
+# 2. RUN AN ULTRA-HIGH PENALTY LASSO CORRECTION
+# ==============================================================================
+set.seed(123)
+cv_ultra <- cv.glmnet(
+  x = x_train_ultra, y = y_train, 
+  alpha = 1, family = "gaussian", nfolds = 10
+)
+
+ultra_lambda <- cv_ultra$lambda.1se * 2.50
+
+# ==============================================================================
+# 3. EXTRACT AND CLEAN THE NEW ULTRA-REDUCED PREDICTORS
+# ==============================================================================
+coef_ultra   <- coef(cv_ultra, s = ultra_lambda)
+matrix_ultra <- as.matrix(coef_ultra)
+
+df_ultra <- data.frame(
+  Dummy_Variable = rownames(matrix_ultra),
+  Coefficient = matrix_ultra[, 1],
+  Absolute_Impact = abs(matrix_ultra[, 1]),
+  stringsAsFactors = FALSE
+)
+
+selected_ultra <- df_ultra %>%
+  filter(Dummy_Variable != "(Intercept)", Coefficient != 0) %>%
+  arrange(desc(Absolute_Impact))
+
+ultra_top_predictors <- selected_ultra %>%
+  rowwise() %>%
+  mutate(Original_Variable = {
+    matches <- names(x_ultra_df)[sapply(names(x_ultra_df), function(orig) grepl(paste0("^", orig), Dummy_Variable))]
+    if(length(matches) > 0) matches[which.max(nchar(matches))] else Dummy_Variable
+  }) %>%
+  ungroup() %>%
+  dplyr::select(Original_Variable, Dummy_Variable, Coefficient)
+
+ultra_var_count <- length(unique(ultra_top_predictors$Original_Variable))
+
+# ==============================================================================
+# 4. EVALUATE ULTRA-STRICT MODEL PERFORMANCE (UPDATED FOR ALL METRICS)
+# ==============================================================================
+pred_train_ultra <- as.numeric(predict(cv_ultra, s = ultra_lambda, newx = x_train_ultra))
+pred_test_ultra  <- as.numeric(predict(cv_ultra, s = ultra_lambda, newx = x_test_ultra))
+
+# Core Error Metrics
+rmse_tr_ult <- sqrt(mean((y_train - pred_train_ultra)^2))
+rmse_te_ult <- sqrt(mean((y_test - pred_test_ultra)^2))
+mae_tr_ult  <- mean(abs(y_train - pred_train_ultra))
+mae_te_ult  <- mean(abs(y_test - pred_test_ultra))
+r2_tr_ult   <- 1 - (sum((y_train - pred_train_ultra)^2) / sum((y_train - mean(y_train))^2))
+r2_te_ult   <- 1 - (sum((y_test - pred_test_ultra)^2) / sum((y_test - mean(y_test))^2))
+
+# Horizontal Context Metrics (ADDED)
+range_y_test       <- max(y_test) - min(y_test)
+norm_mae_test_ult  <- (mae_te_ult / range_y_test) * 100
+mape_test_ult      <- mean(abs((y_test - pred_test_ultra) / y_test)) * 100
+
+# ==============================================================================
+# 5. APPEND, TRANSPOSE, AND PRINT HORIZONTAL COMPARISON (FIXED SYNCHRONIZATION)
+# ==============================================================================
+# Append all 10 metrics to seamlessly align with master dataframe dimensions
+master_comparison$Ultra_Strict_Reduction <- c(
+  ultra_var_count,              # OVR
+  round(rmse_tr_ult, 4),         # Train RMSE
+  round(rmse_te_ult, 4),         # Test RMSE
+  round(mae_tr_ult, 4),          # Train MAE
+  round(mae_te_st, 4),           # Test MAE
+  round(r2_tr_ult, 4),           # Train R-Squared
+  round(r2_te_ult, 4),           # Test R-Squared
+  round(norm_mae_test_ult, 2),   # Test Norm MAE (%)
+  round(mape_test_ult, 2),       # Test MAPE (%)
+  round(ultra_lambda, 6)         # Optimal Lambda
+)
+
+# Run transposition logic immediately within the execution sequence
+transposed_comparison <- as.data.frame(t(master_comparison[, -1]), check.names = FALSE)
+colnames(transposed_comparison) <- master_comparison$Metric
+
+transposed_comparison <- data.frame(
+  Model = rownames(transposed_comparison),
+  transposed_comparison,
+  check.names = FALSE
+)
+
+# Convert character matrices back to numeric for perfect console alignment
+transposed_comparison[, 2:ncol(transposed_comparison)] <- lapply(
+  transposed_comparison[, 2:ncol(transposed_comparison)], 
+  function(x) as.numeric(as.character(x))
+)
+
+row.names(transposed_comparison) <- NULL
+
+
+# Save the updated transposed spreadsheet version to your working files
+write.csv(transposed_comparison, "total_spai_master_comparison_transposed.csv", row.names = FALSE)
+write.csv(ultra_top_predictors, "total_spai_ultra_strict_predictors.csv", row.names = FALSE)
+
+
+
+#################----------------------#######################------------------##############
+#
+#       Fifth Lasso Reduced from 22 to 19 Variables
+#
+#################----------------------#######################------------------##############
+
+# ==============================================================================
+# 0. MEMORY RESET: TRUNCATE TABLE TO THE INITIAL 6 MODELS BEFORE APPENDING
+# ==============================================================================
+# CORRECTED: Safely retains your 6 foundational columns plus Ultra_Strict (7 columns total)
+if(exists("master_comparison")) {
+  master_comparison <- master_comparison[, 1:7]
+}
+
+# ==============================================================================
+# 1. EXTRACT THE 22 VARIABLES FROM THE ULTRA-STRICT MODEL
+# ==============================================================================
+# Extract the unique names of variables that survived the ultra-strict pass
+vars_ultra_22 <- unique(ultra_top_predictors$Original_Variable)
+x_term_df     <- cells_data %>% dplyr::select(all_of(vars_ultra_22))
+x_term_mat    <- model.matrix(~ . - 1, data = x_term_df)
+
+# Align with your original training and testing splits for consistency
+x_train_term <- x_term_mat[train_index, ]
+x_test_term  <- x_term_mat[-train_index, ]
+
+# ==============================================================================
+# 2. RUN A TERMINAL MAXIMUM-PENALTY LASSO CORRECTION
+# ==============================================================================
+set.seed(123)
+cv_term <- cv.glmnet(
+  x = x_train_term, y = y_train, 
+  alpha = 1, family = "gaussian", nfolds = 10
+)
+
+# Amplify the penalty multiplier to 3.5x to aggressively drop to the absolute core
+term_lambda <- cv_term$lambda.1se * 3.50
+
+# ==============================================================================
+# 3. EXTRACT AND CLEAN THE TERMINAL PREDICTORS
+# ==============================================================================
+coef_term   <- coef(cv_term, s = term_lambda)
+matrix_term <- as.matrix(coef_term)
+
+df_term <- data.frame(
+  Dummy_Variable = rownames(matrix_term),
+  Coefficient = matrix_term[, 1],
+  Absolute_Impact = abs(matrix_term[, 1]),
+  stringsAsFactors = FALSE
+)
+
+selected_term <- df_term %>%
+  filter(Dummy_Variable != "(Intercept)", Coefficient != 0) %>%
+  arrange(desc(Absolute_Impact))
+
+term_top_predictors <- selected_term %>%
+  rowwise() %>%
+  mutate(Original_Variable = {
+    matches <- names(x_term_df)[sapply(names(x_term_df), function(orig) grepl(paste0("^", orig), Dummy_Variable))]
+    if(length(matches) > 0) matches[which.max(nchar(matches))] else Dummy_Variable
+  }) %>%
+  ungroup() %>%
+  dplyr::select(Original_Variable, Dummy_Variable, Coefficient)
+
+term_var_count <- length(unique(term_top_predictors$Original_Variable))
+
+# ==============================================================================
+# 4. EVALUATE TERMINAL MODEL PERFORMANCE (UPDATED FOR ALL METRICS)
+# ==============================================================================
+pred_train_term <- as.numeric(predict(cv_term, s = term_lambda, newx = x_train_term))
+pred_test_term  <- as.numeric(predict(cv_term, s = term_lambda, newx = x_test_term))
+
+# Core Error Metrics
+rmse_tr_term <- sqrt(mean((y_train - pred_train_term)^2))
+rmse_te_term <- sqrt(mean((y_test - pred_test_term)^2))
+mae_tr_term  <- mean(abs(y_train - pred_train_term))
+mae_te_term  <- mean(abs(y_test - pred_test_term))
+r2_tr_term   <- 1 - (sum((y_train - pred_train_term)^2) / sum((y_train - mean(y_train))^2))
+r2_te_term   <- 1 - (sum((y_test - pred_test_term)^2) / sum((y_test - mean(y_test))^2))
+
+# Horizontal Context Metrics
+range_y_test      <- max(y_test) - min(y_test)
+norm_mae_test_term <- (mae_te_term / range_y_test) * 100
+mape_test_term     <- mean(abs((y_test - pred_test_term) / y_test)) * 100
+
+# ==============================================================================
+# 5. APPEND, TRANSPOSE, AND PRINT HORIZONTAL COMPARISON
+# ==============================================================================
+# Append all 10 metrics cleanly to match master dataframe dimensions exactly
+master_comparison$Terminal_Core_Reduction <- c(
+  term_var_count,               # OVR
+  round(rmse_tr_term, 4),        # Train RMSE
+  round(rmse_te_term, 4),        # Test RMSE
+  round(mae_tr_term, 4),         # Train MAE
+  round(mae_te_term, 4),         # Test MAE
+  round(r2_tr_term, 4),          # Train R-Squared
+  round(r2_te_term, 4),          # Test R-Squared
+  round(norm_mae_test_term, 2),  # Test Norm MAE (%)
+  round(mape_test_term, 2),      # Test MAPE (%)
+  round(term_lambda, 6)          # Optimal Lambda
+)
+
+# Run transposition logic immediately within the execution sequence
+transposed_comparison <- as.data.frame(t(master_comparison[, -1]), check.names = FALSE)
+colnames(transposed_comparison) <- master_comparison$Metric
+
+transposed_comparison <- data.frame(
+  Model = rownames(transposed_comparison),
+  transposed_comparison,
+  check.names = FALSE
+)
+
+# Convert character matrices back to numeric for perfect console alignment
+transposed_comparison[, 2:ncol(transposed_comparison)] <- lapply(
+  transposed_comparison[, 2:ncol(transposed_comparison)], 
+  function(x) as.numeric(as.character(x))
+)
+
+row.names(transposed_comparison) <- NULL
+
+
+# Save the final clean wide format summary spreadsheet and the core predictors
+write.csv(transposed_comparison, "total_spai_master_comparison_transposed.csv", row.names = FALSE)
+write.csv(term_top_predictors, "total_spai_terminal_core_predictors.csv", row.names = FALSE)
+###################################
+
+###################################
+#
+#   HTML-friendly LASSO Model Comparison Table
+#
+###################################
+
+library(knitr)
+library(kableExtra)
+
+# Create cleaner names
+html_model_comparison <- transposed_comparison %>%
+  dplyr::select(
+    Model,
+    OVR,
+    `Train RMSE`,
+    `Test RMSE`,
+    `Train MAE`,
+    `Test MAE`,
+    `Train R-Squared`,
+    `Test R-Squared`,
+    `Test Norm MAE (%)`,
+    `Test MAPE (%)`,
+    `Optimal Lambda`
+  ) %>%
+  dplyr::mutate(
+    Model = dplyr::recode(
+      Model,
+      "Baseline_Full_Model" = "Baseline",
+      "First_Lasso_Reduction" = "LASSO 1",
+      "Second_Lasso_Reduction" = "LASSO 2",
+      "Lambda_1se_Parsimonious" = "Lambda 1SE",
+      "Strict_Hyper_Parsimonious" = "Strict",
+      "Ultra_Strict_Reduction" = "Ultra",
+      "Terminal_Core_Reduction" = "Terminal"
+    )
+  )
+
+# Shorter column headings
+colnames(html_model_comparison) <- c(
+  "Model",
+  "OVR",
+  "Train RMSE",
+  "Test RMSE",
+  "Train MAE",
+  "Test MAE",
+  "Train R²",
+  "Test R²",
+  "Norm MAE (%)",
+  "MAPE (%)",
+  "Lambda"
+)
+
+# Render HTML table
+html_model_comparison %>%
+  kable(
+    format = "html",
+    digits = 3,
+    caption = "LASSO Regression Model Comparison (Total SPAI)"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "responsive"),
+    full_width = TRUE,
+    position = "center",
+    font_size = 14
+  )
+
+
+```
+
+
+
+Based on the test RMSE, test MAE, test R2, Test Normalized MAE and test MAPE, the model with 33 predictor variables is the best model of all to predict Total SPAI Score.  Model 33 has the test RMSE = 5.1626 which is the lowest error rate of all models considered so far.  The model also explains 74.98% of the variance in unseen test data.  This model has also seen a 59.25% reduction in complexity when compared to the baseline model which is very significant.  By removing those 48 variables the overall performance of the model significantly increased.  However, by removing any additional variables, the prediction accuracy of the model is reduced so the overall best performing model is the model with 33 variables.
+
+Below are the variables that were selected in the optimal model with the most influential at the top and displayed in decreasing order as the influence decreases.  :
+
+```{r}
+# Load ggplot2 for a high-quality visualization
+library(ggplot2)
+
+# ==============================================================================
+# 1. ISOLATE AND RANK THE WINNING 33 PREDICTORS
+# ==============================================================================
+# MODIFIED: Pulls from top_predictors_1se to capture the 33-variable model
+final_ranked_predictors <- top_predictors_1se %>%
+  filter(Dummy_Variable != "(Intercept)", Coefficient != 0) %>%
+  # Recalculate absolute impact to ensure proper ranking execution
+  mutate(Absolute_Impact = abs(Coefficient)) %>%
+  arrange(desc(Absolute_Impact)) %>%
+  dplyr::select(Original_Variable, Dummy_Variable, Coefficient, Absolute_Impact)
+
+# # Print the full ranked list to your console
+# cat("\n==================================================================\n")
+# cat("          FINAL RANKED PREDICTORS (LAMBDA 1SE MODEL)               \n")
+# cat("==================================================================\n")
+# print(final_ranked_predictors, n = Inf, row.names = FALSE)
+
+# MODIFIED: Saved with a unique filename specific to this final 33-variable set
+write.csv(final_ranked_predictors, "total_spai_final_33_predictors.csv", row.names = FALSE)
+
+# ==============================================================================
+# 2. GENERATE A COEFFICIENT IMPACT VISUALIZATION
+# ==============================================================================
+# Create a clear color flag for positive vs. negative coefficients
+plot_df <- final_ranked_predictors %>%
+  mutate(
+    Direction = ifelse(Coefficient > 0, "Increases Addiction", "Decreases Addiction"),
+    # Reorder the dummy variables so the chart ranks them from largest to smallest impact
+    Dummy_Variable = reorder(Dummy_Variable, Absolute_Impact)
+  )
+
+# Build the publication-ready bar chart with centered titles
+coef_plot <- ggplot(plot_df, aes(x = Dummy_Variable, y = Coefficient, fill = Direction)) +
+  geom_bar(stat = "identity", width = 0.75, color = "black", linewidth = 0.2) +
+  coord_flip() + 
+  scale_fill_manual(values = c("Increases Addiction" = "#d95f02", "Decreases Addiction" = "#7570b3")) +
+  labs(
+    title = "Predictor Impact on Total SPAI Score",
+    subtitle = "Final Parsimonious Lasso Model (33 Variables Remaining)",
+    x = "Model Predictors (Dummy Variables)",
+    y = "Lasso Coefficient Value (Impact Weight)",
+    fill = "Effect Direction"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    # FIXED: Added hjust = 0.5 to perfectly center the title and subtitle
+    plot.title = element_text(face = "bold", size = 13, hjust = 0.5, margin = margin(b = 5)),
+    plot.subtitle = element_text(color = "gray30", size = 10, hjust = 0.5, margin = margin(b = 15)),
+    axis.text.y = element_text(size = 9, family = "mono"), 
+    axis.title = element_text(face = "bold"),
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank() 
+  )
+
+
+# Display the plot in your RStudio viewer
+print(coef_plot)
+```
+
+
+After performing the lasso regression and reducing the model to only 19 variables, additional analysis continued.  With the optimal model containing 33 questions that can be used to predict cellphone addition, Ordinary Least Squares was applied to just the top five influential predictor variables from the 33 Variable Lasso Regression model as well as the 52 lambda.min Lasso Regression model as the results from that model were very close to the 33 variable model.  An interesting observation is that the top five variables from the 52 lambda.min model were the exact same top five as the 22 variable model.  
+
+Here is a table that summarizes the results of all models:  
+
+```{r}
+ #==============================================================================
+# 1. ISOLATE TARGET AND SELECTED PREDICTORS (TOP 5 OF 22 CONFIGURATION)
+# ==============================================================================
+# Define the precise 5 features for the updated configuration
+selected_vars_top5_22 <- c("SAPS_10", "SAPS_7", "MPATS4", "SAPS_9", "SAS_CA14")
+
+# Extract features from your base dataframe
+x_ols_df_22 <- cells_data %>% dplyr::select(all_of(selected_vars_top5_22))
+
+# Split the isolated feature space into matching Train/Test matrices 
+# using your script's active training split index
+x_train_ols_22 <- x_ols_df_22[train_index, ]
+x_test_ols_22  <- x_ols_df_22[-train_index, ]
+
+# Combine with target arrays into clean training data frames for lm()
+train_data_ols_22 <- data.frame(y = y_train, x_train_ols_22)
+test_data_ols_22  <- data.frame(y = y_test, x_test_ols_22)
+
+# ==============================================================================
+# 2. FIT THE MULTIPLE LINEAR REGRESSION (OLS) MODEL
+# ==============================================================================
+ols_five_model_22 <- lm(y ~ ., data = train_data_ols_22)
+
+# # ==============================================================================
+# 3. EVALUATE MODEL PERFORMANCE METRICS
+# ==============================================================================
+# Generate numeric vector predictions for test and training pools
+pred_train_ols5_22 <- as.numeric(predict(ols_five_model_22, newdata = train_data_ols_22))
+pred_test_ols5_22  <- as.numeric(predict(ols_five_model_22, newdata = test_data_ols_22))
+
+# Calculate Core Error metrics
+rmse_tr_ols5_22 <- sqrt(mean((y_train - pred_train_ols5_22)^2))
+rmse_te_ols5_22 <- sqrt(mean((y_test - pred_test_ols5_22)^2))
+mae_tr_ols5_22  <- mean(abs(y_train - pred_train_ols5_22))
+mae_te_ols5_22  <- mean(abs(y_test - pred_test_ols5_22))
+r2_tr_ols5_22   <- 1 - (sum((y_train - pred_train_ols5_22)^2) / sum((y_train - mean(y_train))^2))
+r2_te_ols5_22   <- 1 - (sum((y_test - pred_test_ols5_22)^2) / sum((y_test - mean(y_test))^2))
+
+# Calculate Context Metrics
+range_y_test              <- max(y_test) - min(y_test)
+norm_mae_test_ols5_22     <- (mae_te_ols5_22 / range_y_test) * 100
+mape_test_ols5_22         <- mean(abs((y_test - pred_test_ols5_22) / y_test)) * 100
+
+# ==============================================================================
+# 4. PRINT FORMATTED PERFORMANCE RESULTS (EXCLUDING OPTIMAL LAMBDA)
+# ==============================================================================
+ols5_22_results_horizontal <- data.frame(
+  Model = "Top_5_of_22_Model", # MODIFIED
+  OVR = length(selected_vars_top5_22),
+  `Train RMSE` = round(rmse_tr_ols5_22, 4),
+  `Test RMSE`  = round(rmse_te_ols5_22, 4),
+  `Train MAE`   = round(mae_tr_ols5_22, 4),
+  `Test MAE`    = round(mae_te_ols5_22, 4),
+  `Train R-Squared` = round(r2_tr_ols5_22, 4),
+  `Test R-Squared`  = round(r2_te_ols5_22, 4),
+  `Test Norm MAE (%)` = round(norm_mae_test_ols5_22, 2), 
+  `Test MAPE (%)`     = round(mape_test_ols5_22, 2),     
+  check.names = FALSE
+)
+
+# ==============================================================================
+# 1. ISOLATE TARGET AND SELECTED PREDICTORS (MPATS4 EXCLUDED, SAS_C7 ADDED)
+# ==============================================================================
+# Define the precise 5 features for the updated configuration
+selected_vars_new5 <- c("SAPS_10", "SAPS_7", "SAPS_9", "SAS_CA14", "SAS_C7")
+
+# Extract features from your base dataframe
+x_ols5_new_df <- cells_data %>% dplyr::select(all_of(selected_vars_new5))
+
+# Split the isolated feature space into matching Train/Test matrices 
+# using your script's active training split index
+x_train_ols5_new <- x_ols5_new_df[train_index, ]
+x_test_ols5_new  <- x_ols5_new_df[-train_index, ]
+
+# Combine with target arrays into clean training data frames for lm()
+train_data_ols5_new <- data.frame(y = y_train, x_train_ols5_new)
+test_data_ols5_new  <- data.frame(y = y_test, x_test_ols5_new)
+
+# ==============================================================================
+# 2. FIT THE MULTIPLE LINEAR REGRESSION (OLS) MODEL
+# ==============================================================================
+ols_five_new_model <- lm(y ~ ., data = train_data_ols5_new)
+
+
+# ==============================================================================
+# 3. EVALUATE MODEL PERFORMANCE METRICS
+# ==============================================================================
+# Generate numeric vector predictions for test and training pools
+pred_train_ols5_new <- as.numeric(predict(ols_five_new_model, newdata = train_data_ols5_new))
+pred_test_ols5_new  <- as.numeric(predict(ols_five_new_model, newdata = test_data_ols5_new))
+
+# Calculate Core Error metrics
+rmse_tr_ols5_new <- sqrt(mean((y_train - pred_train_ols5_new)^2))
+rmse_te_ols5_new <- sqrt(mean((y_test - pred_test_ols5_new)^2))
+mae_tr_ols5_new  <- mean(abs(y_train - pred_train_ols5_new))
+mae_te_ols5_new  <- mean(abs(y_test - pred_test_ols5_new))
+r2_tr_ols5_new   <- 1 - (sum((y_train - pred_train_ols5_new)^2) / sum((y_train - mean(y_train))^2))
+r2_te_ols5_new   <- 1 - (sum((y_test - pred_test_ols5_new)^2) / sum((y_test - mean(y_test))^2))
+
+# Calculate Context Metrics
+range_y_test           <- max(y_test) - min(y_test)
+norm_mae_test_ols5_new <- (mae_te_ols5_new / range_y_test) * 100
+mape_test_ols5_new     <- mean(abs((y_test - pred_test_ols5_new) / y_test)) * 100
+
+# ==============================================================================
+# 4. PRINT FORMATTED PERFORMANCE RESULTS (EXCLUDING OPTIMAL LAMBDA FOR OLS)
+# ==============================================================================
+ols5_new_results_horizontal <- data.frame(
+  Model = "Top_5_of_33_Model", # MODIFIED
+  OVR = length(selected_vars_new5),
+  `Train RMSE` = round(rmse_tr_ols5_new, 4),
+  `Test RMSE`  = round(rmse_te_ols5_new, 4),
+  `Train MAE`   = round(mae_tr_ols5_new, 4),
+  `Test MAE`    = round(mae_te_ols5_new, 4),
+  `Train R-Squared` = round(r2_tr_ols5_new, 4),
+  `Test R-Squared`  = round(r2_te_ols5_new, 4),
+  `Test Norm MAE (%)` = round(norm_mae_test_ols5_new, 2), 
+  `Test MAPE (%)`     = round(mape_test_ols5_new, 2),     
+  check.names = FALSE
+)
+# ==============================================================================
+# FINAL MASTER SPECIFICATION CONSOLIDATION (WEBSITE HTML FORMAT)
+# ==============================================================================
+
+library(knitr)
+library(kableExtra)
+
+mega_dynamic_comparison <- data.frame(
+  Model = c(
+    "Baseline",
+    "LASSO 1",
+    "LASSO 2",
+    "Lambda 1SE",
+    "Strict",
+    "Ultra",
+    "Terminal",
+    "Top 5 (33)",
+    "Top 5 (52/22)"
+  ),
+  Predictors = c(81, 52, 52, 33, 28, 22, 19, 5, 5),
+  `Test RMSE` = c(5.2338, 5.1702, 5.2142, 5.1626, 5.2553, 5.5280, 5.8296, 6.0199, 6.2256),
+  `Test MAE` = c(3.9987, 3.9714, 3.9902, 3.9910, 4.1075, 4.1075, 4.6312, 4.7114, 4.8361),
+  `Test R²` = c(0.7429, 0.7491, 0.7448, 0.7498, 0.7407, 0.7131, 0.6810, 0.6598, 0.6362),
+  `Norm MAE (%)` = c(7.41, 7.35, 7.39, 7.39, 7.61, 8.06, 8.58, 8.72, 8.96),
+  `MAPE (%)` = c(10.59, 10.58, 10.60, 10.71, 11.21, 12.14, 13.08, 12.65, 12.91),
+  stringsAsFactors = FALSE
+)
+
+
+# ==============================================================================
+# WEBSITE HTML TABLE
+# ==============================================================================
+
+mega_dynamic_comparison %>%
+  kable(
+    format = "html",
+    digits = 3,
+    caption = "OLS and LASSO Model Performance Comparison (Total SPAI)"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c(
+      "striped",
+      "hover",
+      "responsive"
+    ),
+    full_width = TRUE,
+    position = "center",
+    font_size = 14
+  )
+
+
+```
+
+Both models with only five variables performed very well with the top five variables from the 33 variable model accounting for 65.98% of the variances of unseen data which is remarkable high for a real model using only five variables.  
+This study substantiates that if you were only able to conduct a short, five question survey, that the five questions that you should ask are:  
+
+1.	Even when I think I should stop using my mobile phone, I will continue to use it and cannot stop.
+2.	It has become a habit of me to spend a lot of time on my mobile phone.
+3.	I feel very panic when I can’t use my mobile phone.
+4.	I don’t get enough sleep and feel tired from using mobile phone too much.
+5.	Playing mobile phone has affected my academic performance.  
+
+These questions are the strongest indicator of cell phone addition.  
+
 
 #### LASSO regression for SPAI total
 
-We fit plain LASSO (`glmnet`, `alpha = 1`, Gaussian family) and group
-LASSO (`grpreg`, scales as groups) on the training set with 10-fold
-cross-validation to select $\lambda$. Test-set performance is reported
-with $R^2$ and RMSE (Equation 3). Following our Methods section, we
-emphasize **plain LASSO at `lambda.1se`** as the recommended model: it
-achieves strong predictive accuracy while retaining far fewer predictors
-than group LASSO at comparable $R^2$ [@james2013; @huang2024].
+We fit plain LASSO (`glmnet`, `alpha = 1`, Gaussian family) and group LASSO (`grpreg`, scales as groups) on the training set with 10-fold cross-validation to select $\lambda$. Test-set performance is reported with $R^2$ and RMSE (Equation 3). Following our Methods section, we emphasize **plain LASSO at `lambda.1se`** as the recommended model: it achieves strong predictive accuracy while retaining far fewer predictors than group LASSO at comparable $R^2$ [@james2013; @huang2024].
 
 ```{r modeling-setup, warning=FALSE, message=FALSE}
 library(glmnet)
@@ -449,28 +1662,14 @@ scale_counts <- sel_plain %>%
 names(scale_counts) <- c("Scale", "N_items")
 ```
 
-On the held-out test set ($n = `r nrow(mm_reg$x) -
-length(train_index)`$), plain LASSO at`lambda.1se`achieved $R^2 =`r
-gauss_results$R2[1]`$ and RMSE
-$= `r gauss_results$RMSE\[1\]`$, selecting`r
-gauss_results\$N_selected\[1\]`predictors. Group LASSO at`lambda.min`reached a similar $R^2 =`r
-gauss_results$R2[2]`$ but retained `r gauss_results$N_selected[2]`
-predictors—substantially more complexity for little additional
-explanatory gain. In practical terms, the non-SPAI scales explain
-roughly three-quarters of the variation in SPAI total severity on
-respondents the model had not seen during training.
+On the held-out test set ($n = `r nrow(mm_reg$x) - length(train_index)`$), plain LASSO at`lambda.1se`achieved $R^2 =`r gauss_results$R2[1]`$ and RMSE $= `r gauss_results$RMSE[1]`$, selecting`r gauss_results$N_selected[1]`predictors. Group LASSO at`lambda.min`reached a similar $R^2 =`r gauss_results$R2[2]`$ but retained `r gauss_results$N_selected[2]` predictors—substantially more complexity for little additional explanatory gain. In practical terms, the non-SPAI scales explain roughly three-quarters of the variation in SPAI total severity on respondents the model had not seen during training.
 
 ```{r tbl-gaussian, tbl.cap="Gaussian LASSO models predicting SPAI total from non-SPAI items (test set)."}
 kable(gauss_results, align = c("l", "r", "r", "r"),
       col.names = c("Model", "R²", "RMSE", "Predictors selected"))
 ```
 
-Item-level plain LASSO selection was concentrated in **SAPS** (addiction
-proneness) and **SAS** (cognitive and behavioral addiction symptoms).
-Nomophobia (NMP) contributed few or no items once these stronger scales
-were penalized into the model, consistent with the weaker zero-order
-correlation observed in exploration. Demographics played a minor role
-relative to the addiction instrument items.
+Item-level plain LASSO selection was concentrated in **SAPS** (addiction proneness) and **SAS** (cognitive and behavioral addiction symptoms). Nomophobia (NMP) contributed few or no items once these stronger scales were penalized into the model, consistent with the weaker zero-order correlation observed in exploration. Demographics played a minor role relative to the addiction instrument items.
 
 ```{r fig-selected-scales, fig.cap="Number of item-level predictors selected by plain LASSO (lambda.1se), grouped by instrument."}
 ggplot(scale_counts, aes(x = reorder(Scale, N_items), y = N_items, fill = Scale)) +
@@ -479,47 +1678,19 @@ ggplot(scale_counts, aes(x = reorder(Scale, N_items), y = N_items, fill = Scale)
   labs(x = NULL, y = "Selected items",
        title = "Plain LASSO Selected Predictors by Scale") +
   theme_minimal(base_size = 12)
+
+
+
 ```
 
-These results align with the exploratory correlation structure: SAS and
-SAPS track SPAI total most closely, and LASSO uses that shared variance
-efficiently while zeroing out redundant nomophobia items. The high test
-$R^2$ should be interpreted as **convergent validity** among overlapping
-addiction measures rather than evidence of causal effects [@gao2024;
-@lin2014].
+These results align with the exploratory correlation structure: SAS and SAPS track SPAI total most closely, and LASSO uses that shared variance efficiently while zeroing out redundant nomophobia items. The high test $R^2$ should be interpreted as **convergent validity** among overlapping addiction measures rather than evidence of causal effects [@gao2024; @lin2014].
 
-### Conclusion
+## Conclusion
 
-Using LASSO regression on a Chinese CAT item bank of problematic mobile
-phone use [@gao2024], we showed that a sparse plain-LASSO model can
-predict SPAI total addiction severity with strong held-out accuracy
-($R^2 = 0.75$) from other validated scales and demographics. **SAPS**
-and **SAS** emerged as the dominant predictors; **NMP** (nomophobia)
-added little once those instruments were in the model. Plain LASSO at
-`lambda.1se` offered the best balance of fit and parsimony relative to
-group LASSO, which selected many more items for comparable performance.
+Using LASSO regression on a Chinese CAT item bank of problematic mobile phone use [@gao2024], we showed that a sparse plain-LASSO model can predict SPAI total addiction severity with strong held-out accuracy ($R^2 = 0.75$) from other validated scales and demographics. **SAPS** and **SAS** emerged as the dominant predictors; **NMP** (nomophobia) added little once those instruments were in the model. Plain LASSO at `lambda.1se` offered the best balance of fit and parsimony relative to group LASSO, which selected many more items for comparable performance.
 
-Several implications follow from these findings. First, the instruments
-in this item bank measure closely related facets of problematic
-smartphone use; high predictive overlap supports their use as a coherent
-battery but also underscores the multicollinearity that motivates
-penalized regression over ordinary least squares [@james2013;
-@mcneish2015]. Second, because the sample was collected in **China**
-from predominantly young adults (mean age $= 18.8$ years), results
-should not be generalized uncritically to other countries or age groups
-without external validation [@gao2024]. Cultural norms around mobile
-use, educational pressure, and access to digital services differ across
-settings; replication in U.S. or other populations would clarify whether
-SAPS and SAS remain the leading predictors of SPAI severity. Third, for
-clinicians and educators working with similar screening batteries, a
-short subset of SAPS and SAS items identified by LASSO may suffice to
-estimate overall severity, though prospective validation is still
-needed.
+Several implications follow from these findings. First, the instruments in this item bank measure closely related facets of problematic smartphone use; high predictive overlap supports their use as a coherent battery but also underscores the multicollinearity that motivates penalized regression over ordinary least squares [@james2013; @mcneish2015]. Second, because the sample was collected in **China** from predominantly young adults (mean age $= 18.8$ years), results should not be generalized uncritically to other countries or age groups without external validation [@gao2024]. Cultural norms around mobile use, educational pressure, and access to digital services differ across settings; replication in U.S. or other populations would clarify whether SAPS and SAS remain the leading predictors of SPAI severity. Third, for clinicians and educators working with similar screening batteries, a short subset of SAPS and SAS items identified by LASSO may suffice to estimate overall severity, though prospective validation is still needed.
 
-Future work could examine post-LASSO refitting, robustness across
-train–test splits and random seeds, and ordered-outcome models for SPAI
-item 12. Extending the analysis to new geographic samples would
-strengthen claims about which behavioral and psychological drivers of
-smartphone addiction are universal versus context-specific.
+Future work could examine post-LASSO refitting, robustness across train–test splits and random seeds, and ordered-outcome models for SPAI item 12. Extending the analysis to new geographic samples would strengthen claims about which behavioral and psychological drivers of smartphone addiction are universal versus context-specific.
 
 ## References
