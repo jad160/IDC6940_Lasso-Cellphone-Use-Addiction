@@ -1743,7 +1743,7 @@ Sample collected in **China** among predominantly young adults (mean age $= 18.8
 
 - Robustness across train–test splits and random seeds
 - Validate short-form item sets in independent samples
-- Revisit imbalanced SPAI item 12 with class-imbalance-appropriate methods
+- Pursue group LASSO more systematically (scale groupings and penalties vs. iterative plain LASSO)
 - Extend beyond the Chinese young-adult cohort to separate context-specific from universal predictors
 
 ## References {.smaller}
