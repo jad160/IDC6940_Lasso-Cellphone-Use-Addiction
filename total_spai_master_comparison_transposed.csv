@@ -1,0 +1,8 @@
+"Model","OVR","Train RMSE","Test RMSE","Train MAE","Test MAE","Train R-Squared","Test R-Squared","Test Norm MAE (%)","Test MAPE (%)","Optimal Lambda"
+"Baseline_Full_Model",81,4.5998,5.2338,3.614,3.9987,0.7929,0.7429,7.41,10.59,NA
+"First_Lasso_Reduction",52,4.6667,5.1702,3.6992,3.9714,0.7868,0.7491,7.35,10.58,0.074363
+"Second_Lasso_Reduction",52,4.6262,5.2142,3.6554,3.9902,0.7905,0.7448,7.39,10.6,0.020216
+"Lambda_1se_Parsimonious",33,4.8182,5.1626,3.8249,3.991,0.7727,0.7498,7.39,10.71,0.227095
+"Strict_Hyper_Parsimonious",28,4.9304,5.2553,3.9143,4.1075,0.762,0.7407,7.61,11.21,0.576584
+"Ultra_Strict_Reduction",22,5.2294,5.528,4.1358,4.1075,0.7323,0.7131,8.06,12.14,1.195034
+"Terminal_Core_Reduction",19,5.5377,5.8296,4.3464,4.6312,0.6998,0.681,8.58,13.08,1.673048
