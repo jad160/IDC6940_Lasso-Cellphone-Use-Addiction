@@ -1,4 +1,4 @@
-# LASSO Analysis of Problematic Mobile Phone Use
+# Lasso Regression on Cellphone Use Addiction
 
 **IDC6940 — Capstone Projects in Data Science**
 
@@ -7,10 +7,11 @@ Advisor: Dr. Cohen
 
 ## Project overview
 
-We study **problematic mobile phone use** using survey data from a Computer
-Adaptive Testing (CAT) item bank [@gao2024]. The main question: **which
-non-SPAI scales best predict overall smartphone-addiction severity**, measured
-as **SPAI total** (the sum of all 20 SPAI items)?
+We study **problematic mobile phone use** with survey data from a Computer
+Adaptive Testing (CAT) item bank collected in China (Gao et al., 2024). The
+main question: **which non-SPAI scales and demographics best predict overall
+smartphone-addiction severity**, measured as **SPAI total** (sum of all 20
+SPAI items)?
 
 The dataset has **1,619** respondents with complete data on six instrument
 families plus demographics:
@@ -24,68 +25,80 @@ families plus demographics:
 | MPATS | Mobile Phone Addiction Tendency Scale |
 | SAS | Smartphone Addiction Scale (SAS_C / SAS_CA items) |
 
-SPAI items are excluded from predictors when modeling SPAI total so the outcome
-is not built from its own inputs.
+SPAI items are excluded from predictors when modeling SPAI total so the
+outcome is not built from its own inputs. A secondary categorical outcome,
+**SPAI item 12**, captures perceived negative impact on study or work.
 
 ## Methods
 
-We use **penalized linear regression** when dozens of correlated survey items
-create multicollinearity [@james2013; @mcneish2015]. **LASSO** adds an $L_1$
-penalty that shrinks weak coefficients to zero and performs automatic variable
-selection [@tibshirani1996; @hesterberg2008]. **Group LASSO** selects entire
-scales at once rather than individual items [@yuan2006; @huang2024].
+With dozens of correlated survey items, ordinary least squares tends to
+overfit under multicollinearity. **LASSO** adds an \(L_1\) penalty that
+shrinks weak coefficients to exactly zero and performs automatic variable
+selection (Tibshirani, 1996; James et al., 2013).
 
-All models share one **80/20 train/test split** (stratified on `SPAI_12`).
-$\lambda$ is tuned with 10-fold cross-validation; we report **`lambda.min`**
-and **`lambda.1se`** (parsimonious model within one SE of the best CV error).
+Models use an **80/20 train/test split** (stratified on `SPAI_12`). \(\lambda\)
+is tuned with 10-fold cross-validation; we report both **`lambda.min`** and
+**`lambda.1se`**.
 
-Two independent modeling choices:
+### Iterative LASSO variable reduction
 
-1. **Selection unit** — **Plain LASSO** (`glmnet`) keeps or drops individual
-   items; **Group LASSO** (`grpreg`) keeps or drops whole scales at once.
-2. **Outcome type** — **Multinomial** LASSO predicts `SPAI_12` as a 4-level
-   category; **Gaussian** LASSO predicts **SPAI total** as a continuous score.
+Rather than a single fit, the paper uses a **two-phase iterative refitting**
+procedure:
 
-We fit **12 models** in one comparison table:
+1. **Phase 1** — Fit Gaussian LASSO at `lambda.min`, retain nonzero predictors
+   (81 → 52), then refit on survivors for a stability check.
+2. **Phase 2** — Escalate to `lambda.1se` and successively larger multiples of
+   that penalty, refitting after each step and monitoring test RMSE, MAE,
+   \(R^2\), and MAPE until further shrinkage meaningfully degrades accuracy.
 
-- 8 classification models (Plain/Group × variants A, B, C1, C2 on `SPAI_12`)
-- 4 Gaussian regression models (Plain/Group × `lambda.min` / `lambda.1se` on
-  `SPAI_total`)
+Candidates across both phases are compared on held-out metrics; when scores
+are near-equivalent, the more parsimonious model is preferred.
 
-**Recommended model for the paper:** plain LASSO at `lambda.1se` on SPAI total
-— strong test-set R² with far fewer predictors than group LASSO at `lambda.min`.
-Initial results point to **SAPS** and **SAS** as the main cross-scale predictors;
-**nomophobia (NMP)** contributes little once those scales are included.
+### Post-LASSO OLS
+
+From the selected LASSO model, the **five largest-magnitude** predictors are
+refit with ordinary least squares on the same split to assess a short-form
+instrument.
+
+## Key findings
+
+- Preferred model: **33 predictors** (`lambda.1se` after Phase 2) — test
+  RMSE \(= 5.16\), test \(R^2 = 0.75\) (~59% fewer predictors than the
+  81-variable baseline)
+- Further shrinkage to 28 / 22 / 19 predictors degraded accuracy
+  (\(R^2 < 0.70\) at 19) and activated the stopping rule
+- Selected items concentrate in **SAPS** and **SAS**; smaller **MPATS** role;
+  **NMP** largely zeroed out
+- Post-LASSO OLS on five items: test \(R^2 = 0.66\) (strong for a five-item
+  screen, below the 33-item model)
+- High \(R^2\) is best read as **convergent validity** among overlapping
+  addiction instruments, not causation
+- Sample is Chinese young adults (mean age \(= 18.8\); more female than male);
+  findings should not be generalized without external validation
 
 ## Data exploration (highlights)
 
-Exploratory analysis in `index.qmd` and `scripts/` visualizations shows:
+From `index.qmd`:
 
-- Sample: mean age ≈ 18.8 years; 991 female / 628 male respondents
-- SPAI total: mean ≈ 41.8 ($SD$ ≈ 10.2) on a 20–80 scale
-- **NMP** has the highest mean endorsement (~69% of scale maximum) but the
-  **weakest** correlation with SPAI total ($r \approx 0.55$)
-- Strongest SPAI predictors among other scales: **SAS** ($r \approx 0.81$),
-  **SAPS** and **MPATS** ($r \approx 0.71$), **MPAS** ($r \approx 0.65$)
-- All six scales are highly intercorrelated (convergent validity + multicollinearity)
+- SPAI total: mean \(\approx 41.8\) (\(SD \approx 10.2\)) on a 20–80 scale
+- Strongest zero-order correlate with SPAI total: **SAS** (\(r \approx 0.81\));
+  then **SAPS** / **MPATS** (\(r \approx 0.71\)), **MPAS** (\(r \approx 0.65\));
+  **NMP** weakest (\(r \approx 0.55\)) despite high endorsement
+- All six scales are highly intercorrelated (convergent validity +
+  multicollinearity)
 - **SPAI item 12** is class-imbalanced (~6% in the rarest category)
 
 ## Repository structure
 
 ```
-├── index.qmd              # Capstone report (Methods + Data Exploration)
+├── index.qmd              # Capstone report (full narrative + analysis)
 ├── index.html             # Rendered report
 ├── slides.qmd             # Presentation slides
 ├── slides.html            # Rendered slides
 ├── references.bib         # Bibliography
 ├── data/                  # Survey CSV and item-bank documentation
 ├── research/              # Literature reviews and background reading
-├── scripts/
-│   ├── jad160_CellphoneAddiction_Lasso.qmd   # Live analysis + group proposal (PDF)
-│   ├── jad160_CellphoneAddiction_Lasso.pdf   # Rendered proposal
-│   ├── jad160_visualizations.qmd             # Descriptive stats & EDA
-│   ├── phone_use_visualizations.qmd          # Scale distributions & correlations
-│   └── jad160_CellphoneAddiction_Lasso.R     # Standalone R script (local; gitignored)
+├── scripts/               # Supporting EDA and analysis notebooks
 └── instructions/          # Course template files
 ```
 
@@ -97,9 +110,12 @@ Exploratory analysis in `index.qmd` and `scripts/` visualizations shows:
 
 Source: Gao et al. (2024), *Data in Brief* — CAT-PMPU item bank and dataset.
 
+Rendering `index.qmd` / `slides.qmd` expects a working copy named
+`cellphone.csv` in the project root (copy from the CAT CSV if needed).
+
 ## Running the analysis
 
-**Capstone report** — Methods, EDA figures, and bibliography:
+**Capstone report:**
 
 ```bash
 quarto render index.qmd
@@ -115,15 +131,6 @@ quarto render slides.qmd
 
 Output: `slides.html`
 
-**Quarto proposal (detailed model comparison)** — reproducible tables, renders
-to PDF:
-
-```bash
-quarto render scripts/jad160_CellphoneAddiction_Lasso.qmd
-```
-
-Output: `scripts/jad160_CellphoneAddiction_Lasso.pdf`
-
 **Exploratory visualizations:**
 
 ```bash
@@ -131,22 +138,13 @@ quarto render scripts/jad160_visualizations.qmd
 quarto render scripts/phone_use_visualizations.qmd
 ```
 
-Requires R packages: `tidyverse`, `glmnet`, `grpreg`, `caret`, `nnet`, `dplyr`,
-`knitr`, `patchwork`, `ggplot2`. For PDF output, a LaTeX engine is needed
-(`tinytex::install_tinytex()` if rendering fails).
-
-**Standalone R script** — from the project root:
-
-```r
-source("scripts/jad160_CellphoneAddiction_Lasso.R")
-```
-
-Run by sourcing the file (not pasting line-by-line into the console).
+Requires R packages including: `tidyverse`, `glmnet`, `grpreg`, `caret`,
+`knitr`, `kableExtra`, `patchwork`, `ggplot2`.
 
 ## Viewing the report
 
-The course report is published via GitHub Pages:
+Published via GitHub Pages:
 
-**https://jad160.github.io/IDC6940_Lasso-Short-Videos-Addiction/**
+**https://jad160.github.io/IDC6940_Lasso-Cellphone-Use-Addiction/**
 
 Open `slides.html` locally for the team presentation deck.
