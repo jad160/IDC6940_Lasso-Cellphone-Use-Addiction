@@ -1749,8 +1749,11 @@ ggplot(scale_counts, aes(x = reorder(Scale, N_items), y = N_items, fill = Scale)
 - Test RMSE $= 5.16$, test $R^2 = 0.75$; further shrinkage (28 / 22 / 19) degraded accuracy
 - Plain LASSO preferred to group LASSO (comparable $R^2$ only with many more predictors)
 - **SAPS** and **SAS** dominate; smaller MPATS role; **NMP** largely zeroed out
-- Post-LASSO OLS on five largest-magnitude items: test $R^2 = 0.66$ (below 0.75, strong for five items)
-- Those five items: compulsive use, habitual time spent, separation panic, sleep loss, academic interference
+
+## Conclusion (continued)
+
+- Post-LASSO OLS on five items: test $R^2 = 0.66$ (below 0.75, strong for five items)
+- Those items: compulsive use, time spent, separation panic, sleep loss, academic interference
 - High $R^2$ = **convergent validity**, not causation [@gao2024; @lin2014; @james2013]
 - Multicollinearity ($r > 0.60$) motivates LASSO over OLS [@mcneish2015]
 
