@@ -6,7 +6,7 @@ format:
   html:
     code-fold: true
 course: Capstone Projects in Data Science
-#bibliography: references.bib # file contains bibtex for references
+bibliography: references.bib # file contains bibtex for references
 #always_allow_html: true # this allows to get PDF with HTML features
 self-contained: true
 execute: 
@@ -19,15 +19,61 @@ Slides: [slides.html](slides.html){target="_blank"}
 
 ## Introduction
 
-In today's ever-growing digital era, what began as a tool of convenience, smartphones and devices have become a vital piece of our daily life. While these items enable instant communication across the globe, growing usage has evolved into an increasing psychological and social crisis: smartphone addiction. Characterized by the compulsive need to check notifications and apps, withdrawal symptoms, and severe interference with daily life, smartphone dependency shows an increasing link to rising rates of anxiety, sleep deprivation, and diminished academic performance among young adults [@lin2014]. Identifying the precise behavioral, social, and psychological drivers of this addiction is critical for developing effective interventions. Available data tracking screen time, app usage, and psychological metrics frequently contain dozens of interconnected variables. Traditional linear regression models struggle under this weight, frequently from overfitting and multicollinearity, which obscures the true narrative hidden within the data [@james2013].
+In today's ever-growing digital era, what began as a tool of
+convenience, smartphones and devices have become a vital piece of our
+daily life. While these items enable instant communication across the
+globe, growing usage has evolved into an increasing psychological and
+social crisis: smartphone addiction. Characterized by the compulsive
+need to check notifications and apps, withdrawal symptoms, and severe
+interference with daily life, smartphone dependency shows an increasing
+link to rising rates of anxiety, sleep deprivation, and diminished
+academic performance among young adults [@lin2014]. Identifying the
+precise behavioral, social, and psychological drivers of this addiction
+is critical for developing effective interventions. Available data
+tracking screen time, app usage, and psychological metrics frequently
+contain dozens of interconnected variables. Traditional linear
+regression models struggle under this weight, frequently from
+overfitting and multicollinearity, which obscures the true narrative
+hidden within the data [@james2013].
 
-In this project, we will explore the Least Absolute Shrinkage and Selection Operator (LASSO) method, commonly known as LASSO regression, to isolate the most critical predictors of smartphone addiction. Introduced by Robert Tibshirani [-@tibshirani1996], LASSO is a powerful statistical method designed for both regularization and variable selection. Traditional ordinary least squares (OLS) regression treats every available variable as important, which often introduces noise and reduces predictive accuracy when dealing with large datasets. LASSO solves this problem by adding a mathematical constraint—known as an L1 penalty—to the sum of the absolute values of the regression coefficients [@tibshirani1996].
+In this project, we will explore the Least Absolute Shrinkage and
+Selection Operator (LASSO) method, commonly known as LASSO regression,
+to isolate the most critical predictors of smartphone addiction.
+Introduced by Robert Tibshirani [-@tibshirani1996], LASSO is a powerful
+statistical method designed for both regularization and variable
+selection. Traditional ordinary least squares (OLS) regression treats
+every available variable as important, which often introduces noise and
+reduces predictive accuracy when dealing with large datasets. LASSO
+solves this problem by adding a mathematical constraint—known as an L1
+penalty—to the sum of the absolute values of the regression coefficients
+[@tibshirani1996].
 
-This L1 penalty performs a unique function: it actively shrinks the coefficients of less important variables toward zero [@james2013]. Notably, unlike other methods such as Ridge regression, LASSO can force coefficients to become exactly zero [@tibshirani1996]. LASSO automatically performs variable selection, completely removing irrelevant or redundant features from the final model, resulting in a highly interpretable, sparse model consisting only of the most statistically significant predictors.
+This L1 penalty performs a unique function: it actively shrinks the
+coefficients of less important variables toward zero [@james2013].
+Notably, unlike other methods such as Ridge regression, LASSO can force
+coefficients to become exactly zero [@tibshirani1996]. LASSO
+automatically performs variable selection, completely removing
+irrelevant or redundant features from the final model, resulting in a
+highly interpretable, sparse model consisting only of the most
+statistically significant predictors.
 
-Our dataset explores problematic smartphone usage from survey data collected in China using a Computer Adaptive Testing (CAT) item bank [@gao2024]. It is comprised of 1,619 respondents with complete data on six instrument families plus the demographics.
+Our dataset explores problematic smartphone usage from survey data
+collected in China using a Computer Adaptive Testing (CAT) item bank
+[@gao2024]. It is comprised of 1,619 respondents with complete data on
+six instrument families plus the demographics.
 
-Here we will apply LASSO regression to a comprehensive smartphone addiction dataset to break down which specific behaviors and demographics truly drive the dependencies. Smartphone datasets are particularly noisy, with variables like social media screen time, daily notification counts, and self-reported anxiety scores often overlapping and distorting traditional models. By implementing LASSO, we can mathematically weed out any statistical noise, isolating the leading factors [@james2013]. Ideally, this approach will aid us in answering a crucial question: with the countless digital metrics tracked today, which factors truly lead to smartphone addictions? Our findings aim to provide a streamlined, data-driven framework that peers and clinicians alike can use to understand and combat digital dependency.
+Here we will apply LASSO regression to a comprehensive smartphone
+addiction dataset to break down which specific behaviors and
+demographics truly drive the dependencies. Smartphone datasets are
+particularly noisy, with variables like social media screen time, daily
+notification counts, and self-reported anxiety scores often overlapping
+and distorting traditional models. By implementing LASSO, we can
+mathematically weed out any statistical noise, isolating the leading
+factors [@james2013]. Ideally, this approach will aid us in answering a
+crucial question: with the countless digital metrics tracked today,
+which factors truly lead to smartphone addictions? Our findings aim to
+provide a streamlined, data-driven framework that peers and clinicians
+alike can use to understand and combat digital dependency.
 
 | Abbreviation | Scale                                             |
 |--------------|---------------------------------------------------|
@@ -40,21 +86,40 @@ Here we will apply LASSO regression to a comprehensive smartphone addiction data
 
 ## Methods
 
-We model smartphone addiction severity with penalized linear regression. Each respondent contributes item-level responses from six validated instrument families (NMP, SAPS, SPAI, MPAS, MPATS, SAS) plus demographics. After listwise deletion of incomplete records, $n = 1{,}619$ complete cases remain. The primary continuous outcome is **SPAI total**, the sum of 20 SPAI items (range 20–80) [@lin2014]. SPAI items are excluded from the predictor set when predicting SPAI total to avoid circularity; we instead ask whether nomophobia, proneness, and related scales track overall SPAI severity. A secondary categorical outcome, **SPAI item 12**, captures perceived negative impact on study or work on a four-point Likert scale.
+We model smartphone addiction severity with penalized linear regression.
+Each respondent contributes item-level responses from six validated
+instrument families (NMP, SAPS, SPAI, MPAS, MPATS, SAS) plus
+demographics. After listwise deletion of incomplete records,
+$n = 1{,}619$ complete cases remain. The primary continuous outcome is
+**SPAI total**, the sum of 20 SPAI items (range 20–80) [@lin2014]. SPAI
+items are excluded from the predictor set when predicting SPAI total to
+avoid circularity; we instead ask whether nomophobia, proneness, and
+related scales track overall SPAI severity. A secondary categorical
+outcome, **SPAI item 12**, captures perceived negative impact on study
+or work on a four-point Likert scale.
 
 ### Ordinary least squares and why LASSO
 
-A standard linear model for continuous outcome $y_i$ and predictors $\mathbf{x}_i \in \mathbb{R}^p$ is
+A standard linear model for continuous outcome $y_i$ and predictors
+$\mathbf{x}_i \in \mathbb{R}^p$ is
 
 $$y_i = \beta_0 + \sum_{j=1}^{p} \beta_j x_{ij} + \varepsilon_i,
 \qquad i = 1,\ldots,n.
 \tag{1}$$
 
-Ordinary least squares (OLS) minimizes the residual sum of squares $\sum_{i=1}^{n}(y_i - \hat{y}_i)^2$. With dozens of correlated survey items, OLS tends to overfit, inflate coefficient variance, and produce unstable signs under multicollinearity [@james2013; @mcneish2015]. Ridge regression adds an $L_2$ penalty that shrinks coefficients but rarely sets them exactly to zero [@hoerl1970]. LASSO replaces that penalty with an $L_1$ term, enabling simultaneous shrinkage and variable selection [@tibshirani1996; @hesterberg2008].
+Ordinary least squares (OLS) minimizes the residual sum of squares
+$\sum_{i=1}^{n}(y_i - \hat{y}_i)^2$. With dozens of correlated survey
+items, OLS tends to overfit, inflate coefficient variance, and produce
+unstable signs under multicollinearity [@james2013; @mcneish2015]. Ridge
+regression adds an $L_2$ penalty that shrinks coefficients but rarely
+sets them exactly to zero [@hoerl1970]. LASSO replaces that penalty with
+an $L_1$ term, enabling simultaneous shrinkage and variable selection
+[@tibshirani1996; @hesterberg2008].
 
 ### LASSO objective and tuning
 
-LASSO estimates coefficients by minimizing the penalized least-squares objective [@tibshirani1996; @santosa1986]:
+LASSO estimates coefficients by minimizing the penalized least-squares
+objective [@tibshirani1996; @santosa1986]:
 
 $$\min_{\boldsymbol{\beta}}
 \left\{
@@ -64,7 +129,16 @@ $$\min_{\boldsymbol{\beta}}
 \right\}.
 \tag{2}$$
 
-The tuning parameter $\lambda \geq 0$ controls the bias–variance trade-off. When $\lambda = 0$, Equation (2) reduces to OLS; as $\lambda$ increases, more coefficients are driven to exactly zero, yielding a sparse, interpretable model [@efron2004; @dalalyan2017]. We select $\lambda$ with 10-fold cross-validation on an 80/20 train–test split, reporting both **`lambda.min`** (lowest CV error) and **`lambda.1se`** (simplest model within one standard error of the minimum) [@james2013]. For the main paper result we emphasize plain LASSO at `lambda.1se` as a deliberate parsimony choice: it retains nearly the same test $R^2$ while selecting far fewer predictors.
+The tuning parameter $\lambda \geq 0$ controls the bias–variance
+trade-off. When $\lambda = 0$, Equation (2) reduces to OLS; as $\lambda$
+increases, more coefficients are driven to exactly zero, yielding a
+sparse, interpretable model [@efron2004; @dalalyan2017]. We select
+$\lambda$ with 10-fold cross-validation on an 80/20 train–test split,
+reporting both **`lambda.min`** (lowest CV error) and **`lambda.1se`**
+(simplest model within one standard error of the minimum) [@james2013].
+For the main paper result we emphasize plain LASSO at `lambda.1se` as a
+deliberate parsimony choice: it retains nearly the same test $R^2$ while
+selecting far fewer predictors.
 
 Test-set performance for continuous models is summarized by
 
@@ -74,61 +148,91 @@ $$R^2 = 1 - \frac{\sum_{i}(y_i - \hat{y}_i)^2}{\sum_{i}(y_i - \bar{y})^2},
 \tag{3}$$
 
 ### Iterative LASSO variable reduction
-Rather than fitting a single LASSO model and choosing between lambda.min and
-lambda.1se, we used an iterative, sequential-refitting procedure in two phases.
 
-Phase 1: Initial selection and stability check. LASSO (glmnet, alpha = 1, Gaussian
-family) was fit using 10-fold CV, with coefficients extracted at lambda.min. Predictors
-with a nonzero coefficient were retained and all others were dropped. We then refit
-LASSO on the surviving predictors, again at lambda.min. Because the penalty was held
-constant, this refit was not expected to drop further predictors. Its purpose was to
-confirm that the first fit had already removed the noise variables and to let the remaining
-coefficients re-adjust now that the eliminated predictors no longer competed for shared
-variance.
+Rather than fitting a single LASSO model and choosing between lambda.min
+and lambda.1se, we used an iterative, sequential-refitting procedure in
+two phases.
 
-Phase 2: Escalation. We then switched to lambda.1se, which by construction is more
-aggressive about zeroing out coefficients, and refit on the Phase 1 predictor set. From
-there we continued refitting the surviving predictors at successively larger multiples of
-lambda.1se. The size of each successive multiplier was chosen adaptively. After each
-refit, we evaluated test RMSE, MAE, R², and MAPE. Only then decided whether a
-further, larger penalty was worth trying, since the effect of additional shrinkage on
-accuracy could not be anticipated in advance. This loop continued until a refit produced
-a simultaneous, meaningful change in RMSE, MAE, R², and MAPE relative to the
-preceding step, which we treated as the signal to stop further reduction.
+Phase 1: Initial selection and stability check. LASSO (glmnet, alpha =
+1, Gaussian family) was fit using 10-fold CV, with coefficients
+extracted at lambda.min. Predictors with a nonzero coefficient were
+retained and all others were dropped. We then refit LASSO on the
+surviving predictors, again at lambda.min. Because the penalty was held
+constant, this refit was not expected to drop further predictors. Its
+purpose was to confirm that the first fit had already removed the noise
+variables and to let the remaining coefficients re-adjust now that the
+eliminated predictors no longer competed for shared variance.
 
-Model Selection: Every candidate model produced across both phases, not just the last
-one fit, were compared on test RMSE, MAE, R², and MAPE. The candidate with the
-strongest metrics overall was treated as the leading model. Where two or more
-candidates had near-equivalent metrics, we selected the most parsimonious of that
-group (i.e., the one with fewer predictors), on the reasoning that a simpler model is
-preferable when it sacrifices little to no measurable accuracy. Which candidate this rule
-selected, and its exact predictor count and performance metrics, are reported in the
-Results section.
+Phase 2: Escalation. We then switched to lambda.1se, which by
+construction is more aggressive about zeroing out coefficients, and
+refit on the Phase 1 predictor set. From there we continued refitting
+the surviving predictors at successively larger multiples of lambda.1se.
+The size of each successive multiplier was chosen adaptively. After each
+refit, we evaluated test RMSE, MAE, R², and MAPE. Only then decided
+whether a further, larger penalty was worth trying, since the effect of
+additional shrinkage on accuracy could not be anticipated in advance.
+This loop continued until a refit produced a simultaneous, meaningful
+change in RMSE, MAE, R², and MAPE relative to the preceding step, which
+we treated as the signal to stop further reduction.
+
+Model Selection: Every candidate model produced across both phases, not
+just the last one fit, were compared on test RMSE, MAE, R², and MAPE.
+The candidate with the strongest metrics overall was treated as the
+leading model. Where two or more candidates had near-equivalent metrics,
+we selected the most parsimonious of that group (i.e., the one with
+fewer predictors), on the reasoning that a simpler model is preferable
+when it sacrifices little to no measurable accuracy. Which candidate
+this rule selected, and its exact predictor count and performance
+metrics, are reported in the Results section.
 
 ### Post-LASSO OLS on top predictors
-To assess how much predictive power could be retained with an even more minimal
-item set, we additionally identified, from the selected LASSO model, the five predictors
-with the largest absolute standardized coefficients, and refit that five-predictor subset
-using ordinary least squares (OLS) on the same train/test split. This follow-up analysis
-addresses a practical question distinct from model selection itself: how many survey
-items would be needed to approximate the full model's predictive accuracy in a short-
-form instrument. Which items were selected and how much variance they explained are
-reported in the Results section.
 
-
-
+To assess how much predictive power could be retained with an even more
+minimal item set, we additionally identified, from the selected LASSO
+model, the five predictors with the largest absolute standardized
+coefficients, and refit that five-predictor subset using ordinary least
+squares (OLS) on the same train/test split. This follow-up analysis
+addresses a practical question distinct from model selection itself: how
+many survey items would be needed to approximate the full model's
+predictive accuracy in a short- form instrument. Which items were
+selected and how much variance they explained are reported in the
+Results section.
 
 ### Justification for this problem and data
 
-Our CAT item bank contains on the order of 100 item-level predictors that measure overlapping facets of problematic phone use [@gao2024]. Pearson correlations among scale totals exceed $r = 0.64$ for several pairs (see Data Exploration), so multicollinearity is expected rather than exceptional. LASSO is well suited to high-dimensional, collinear psychological survey data because it stabilizes estimation and returns a sparse subset of items or scales that best predict addiction severity [@mcneish2015; @dalalyan2017]. Comparing models reduced by `lambda.min` and `lambda.1se`, lets us balance predictive accuracy against interpretability—an important consideration when communicating results to clinicians and educators [@james2013; @huang2024].
+Our CAT item bank contains on the order of 100 item-level predictors
+that measure overlapping facets of problematic phone use [@gao2024].
+Pearson correlations among scale totals exceed $r = 0.64$ for several
+pairs (see Data Exploration), so multicollinearity is expected rather
+than exceptional. LASSO is well suited to high-dimensional, collinear
+psychological survey data because it stabilizes estimation and returns a
+sparse subset of items or scales that best predict addiction severity
+[@mcneish2015; @dalalyan2017]. Comparing models reduced by `lambda.min`
+and `lambda.1se`, lets us balance predictive accuracy against
+interpretability—an important consideration when communicating results
+to clinicians and educators [@james2013; @huang2024].
 
 ## Analysis and Results
 
 ### Data Exploration and Visualization
 
-Data come from a Computer Adaptive Testing (CAT) item bank on problematic mobile phone use [@gao2024]. Respondents completed items from six instrument families—nomophobia (NMP), smartphone addiction proneness (SAPS), the Smartphone Addiction Inventory (SPAI) [@lin2014], the Mobile Phone Addiction Scale (MPAS), the Mobile Phone Addiction Tendency Scale (MPATS), and the Smartphone Addiction Scale (SAS-C and SAS-CA)—along with demographics (age, gender, grade). The raw file contains $n = 1{,}619$ respondents with complete records on all variables; no listwise missingness remains after filtering. Scale totals are computed as the sum of item scores within each instrument (higher totals indicate more problematic use, per the item bank codebook).
+Data come from a Computer Adaptive Testing (CAT) item bank on
+problematic mobile phone use [@gao2024]. Respondents completed items
+from six instrument families—nomophobia (NMP), smartphone addiction
+proneness (SAPS), the Smartphone Addiction Inventory (SPAI) [@lin2014],
+the Mobile Phone Addiction Scale (MPAS), the Mobile Phone Addiction
+Tendency Scale (MPATS), and the Smartphone Addiction Scale (SAS-C and
+SAS-CA)—along with demographics (age, gender, grade). The raw file
+contains $n = 1{,}619$ respondents with complete records on all
+variables; no listwise missingness remains after filtering. Scale totals
+are computed as the sum of item scores within each instrument (higher
+totals indicate more problematic use, per the item bank codebook).
 
-The sample is predominantly young adults (mean age $= 18.8$ years, $SD = 2.9$), with more female ($n = 991$) than male ($n = 628$) respondents. SPAI total—the primary outcome for regression—has mean $= 41.8$ ($SD = 10.2$) on the 20–80 scale, with a roughly symmetric distribution centered below the midpoint.
+The sample is predominantly young adults (mean age $= 18.8$ years,
+$SD = 2.9$), with more female ($n = 991$) than male ($n = 628$)
+respondents. SPAI total—the primary outcome for regression—has mean
+$= 41.8$ ($SD = 10.2$) on the 20–80 scale, with a roughly symmetric
+distribution centered below the midpoint.
 
 ```{r viz-setup, warning=FALSE, message=FALSE}
 library(tidyverse)
@@ -170,7 +274,11 @@ ggplot(dat, aes(x = SPAI_total)) +
   )
 ```
 
-Pearson correlations with SPAI total rank the predictor scales as follows: SAS ($r = 0.81$), SAPS ($r = 0.71$), MPATS ($r = 0.71$), MPAS ($r = 0.65$), and NMP ($r = 0.55$). The scatter plot below shows the strongest of these relationships—SAS against SPAI total—with a strong linear trend and modest residual spread.
+Pearson correlations with SPAI total rank the predictor scales as
+follows: SAS ($r = 0.81$), SAPS ($r = 0.71$), MPATS ($r = 0.71$), MPAS
+($r = 0.65$), and NMP ($r = 0.55$). The scatter plot below shows the
+strongest of these relationships—SAS against SPAI total—with a strong
+linear trend and modest residual spread.
 
 ```{r fig-scatter-sas, fig.cap="SAS total versus SPAI total with OLS trend line and 95% CI band."}
 ggplot(dat, aes(x = SAS_total, y = SPAI_total)) +
@@ -188,7 +296,10 @@ ggplot(dat, aes(x = SAS_total, y = SPAI_total)) +
   )
 ```
 
-All six scale totals move together (inter-scale $r$ often exceeds 0.60), confirming substantial **convergent validity** among instruments but also highlighting the multicollinearity that motivates LASSO regularization.
+All six scale totals move together (inter-scale $r$ often exceeds 0.60),
+confirming substantial **convergent validity** among instruments but
+also highlighting the multicollinearity that motivates LASSO
+regularization.
 
 ```{r fig-corr-heatmap, fig.cap="Pearson correlation heatmap among scale totals (complete cases)."}
 corr_cols <- c("NMP_total", "SAPS_total", "SPAI_total", "MPAS_total",
@@ -213,7 +324,17 @@ ggplot(corr_long, aes(x = Scale2, y = Scale1, fill = r)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-Two patterns warrant attention before modeling. First, **SPAI item 12** (perceived impact on study/work) is highly imbalanced: levels 1–4 contain 262, 577, 688, and 92 responses respectively, so the rarest category is only $5.7\%$ of the sample—classification models must account for this skew. Second, although NMP shows the highest average endorsement when rescaled to a percentage of maximum ($= 68.8\%$), it correlates **weakest** with SPAI total among the five non-SPAI scales, hinting that nomophobia may be partially redundant once proneness (SAPS) and SAS symptoms are considered—a pattern consistent with preliminary LASSO results where NMP items are often zeroed out. The figure below summarizes the age and gender composition of the sample.
+Two patterns warrant attention before modeling. First, **SPAI item 12**
+(perceived impact on study/work) is highly imbalanced: levels 1–4
+contain 262, 577, 688, and 92 responses respectively, so the rarest
+category is only $5.7\%$ of the sample—classification models must
+account for this skew. Second, although NMP shows the highest average
+endorsement when rescaled to a percentage of maximum ($= 68.8\%$), it
+correlates **weakest** with SPAI total among the five non-SPAI scales,
+hinting that nomophobia may be partially redundant once proneness (SAPS)
+and SAS symptoms are considered—a pattern consistent with preliminary
+LASSO results where NMP items are often zeroed out. The figure below
+summarizes the age and gender composition of the sample.
 
 ```{r fig-demographics, fig.cap="Age distribution and demographic breakdown (complete cases).", fig.width=10, fig.height=4}
 gender_labels <- c("1" = "Male", "2" = "Female")
@@ -232,13 +353,27 @@ p_gender <- dat %>% count(gender_lab) %>%
 p_age + p_gender + plot_layout(widths = c(2, 1))
 ```
 
-Together, these exploratory plots motivate our modeling strategy: SPAI total is suitable as a continuous Gaussian outcome; the strong SAPS and SAS relationships suggest they will dominate LASSO selection; and the shared variance across scales justifies penalized regression over unregularized OLS [@james2013; @gao2024].
+Together, these exploratory plots motivate our modeling strategy: SPAI
+total is suitable as a continuous Gaussian outcome; the strong SAPS and
+SAS relationships suggest they will dominate LASSO selection; and the
+shared variance across scales justifies penalized regression over
+unregularized OLS [@james2013; @gao2024].
 
 ### Modeling and Results
 
 #### Data preprocessing
 
-We began with the raw CAT item bank file ($n = 1{,}619$ rows, 101 variables) and retained only complete cases; no listwise missingness required exclusion. The primary outcome **SPAI total** was computed as the sum of 20 SPAI items. All other SPAI item columns were removed from the predictor matrix when modeling SPAI total to avoid circularity. Demographics (age, gender, grade) and item-level responses from NMP, SAPS, MPAS, MPATS, and SAS (SAS-C and SAS-CA) entered as predictors. Gender and grade were coded as factors; all item responses were treated as numeric. Predictors were assembled with a model matrix (no intercept column in the penalized fit). Respondents were split 80/20 into training and test sets. All continuous models below use the same split.
+We began with the raw CAT item bank file ($n = 1{,}619$ rows, 101
+variables) and retained only complete cases; no listwise missingness
+required exclusion. The primary outcome **SPAI total** was computed as
+the sum of 20 SPAI items. All other SPAI item columns were removed from
+the predictor matrix when modeling SPAI total to avoid circularity.
+Demographics (age, gender, grade) and item-level responses from NMP,
+SAPS, MPAS, MPATS, and SAS (SAS-C and SAS-CA) entered as predictors.
+Gender and grade were coded as factors; all item responses were treated
+as numeric. Predictors were assembled with a model matrix (no intercept
+column in the penalized fit). Respondents were split 80/20 into training
+and test sets. All continuous models below use the same split.
 
 ```{r}
 #| echo: false
@@ -385,19 +520,72 @@ legend(
 )
 ```
 
-The figure shows predicted versus actual Total SPAI scores from a 10-fold cross-validated LASSO regression model. The model began with 81 candidate predictors and retained 52 predictors using the lambda-min penalty. The dashed reference line represents perfect prediction.  There is a strong positive linear correlation and a good fit with test RMSE = 5.1702, test MAE = 3.9714 and test MAPE = 10.58 percent.  The optimal lambda = 0.074363.
+The figure shows predicted versus actual Total SPAI scores from a
+10-fold cross-validated LASSO regression model. The model began with 81
+candidate predictors and retained 52 predictors using the lambda-min
+penalty. The dashed reference line represents perfect prediction. There
+is a strong positive linear correlation and a good fit with test RMSE =
+5.1702, test MAE = 3.9714 and test MAPE = 10.58 percent. The optimal
+lambda = 0.074363.
 
-Lasso regression was preformed one more time on the remaining 52 variables using lambda.min again.  Even though the optimal lambda for this model is 0.020216, no variables were dropped which shows that the remaining variables have sufficient information to contribute to the model such that lambda.min will not eliminate any additional variables.  The test RMSE = 5.2142, test MAE = 3.9902 and the test MAPE = 10.6 percent.  Because this is the best that lambda.min can do and because there are still 52 variables being used as predictors, lambda.1se will be used to reduce the model even further.  
+Lasso regression was preformed one more time on the remaining 52
+variables using lambda.min again. Even though the optimal lambda for
+this model is 0.020216, no variables were dropped which shows that the
+remaining variables have sufficient information to contribute to the
+model such that lambda.min will not eliminate any additional variables.
+The test RMSE = 5.2142, test MAE = 3.9902 and the test MAPE = 10.6
+percent. Because this is the best that lambda.min can do and because
+there are still 52 variables being used as predictors, lambda.1se will
+be used to reduce the model even further.
 
-Lambda.min is the exact value of $\lambda$ that results in the lowest possible mean squared error (MSE) during cross-validation.  The goal of lambda.min is to maximize the prediction accuracy which means that it is less aggressive at dropping variables.  Thus variables with noise or little contribution to the model will often remain in the model leading to a large and often complex model.  Since the focus of Lasso Regression is to minimize the number of predictor variables while maintaining accuracy, lambda.1se was used for the next reduction.  Lambda.1se is the largest value of $\lambda$ whose cross-validation error is still within one standard error of the absolute minimum error.  This will force more variables that have minimum contribution to the model to be dropped and yielding a simpler model that gives similar results to lambda.min.  
+Lambda.min is the exact value of $\lambda$ that results in the lowest
+possible mean squared error (MSE) during cross-validation. The goal of
+lambda.min is to maximize the prediction accuracy which means that it is
+less aggressive at dropping variables. Thus variables with noise or
+little contribution to the model will often remain in the model leading
+to a large and often complex model. Since the focus of Lasso Regression
+is to minimize the number of predictor variables while maintaining
+accuracy, lambda.1se was used for the next reduction. Lambda.1se is the
+largest value of $\lambda$ whose cross-validation error is still within
+one standard error of the absolute minimum error. This will force more
+variables that have minimum contribution to the model to be dropped and
+yielding a simpler model that gives similar results to lambda.min.
 
-Using lambda.1se = 0.227095 reduced the model from 52 predictor variables down to 33 predictor variables.  That is a 19 variable drop in the model which is the exact goal of Lasso Regression.  While this Lasso created a simpler, less complex model, the test RMSE improved slightly to 5.1626; the test R2 improved slightly to 0.7498 and the Normalized Test MAE remained unchanged through this reduction.  Based on this information, this is the best performing model yet and it is the least complex model so far as it has the lowest number of predictor variables.  
+Using lambda.1se = 0.227095 reduced the model from 52 predictor
+variables down to 33 predictor variables. That is a 19 variable drop in
+the model which is the exact goal of Lasso Regression. While this Lasso
+created a simpler, less complex model, the test RMSE improved slightly
+to 5.1626; the test R2 improved slightly to 0.7498 and the Normalized
+Test MAE remained unchanged through this reduction. Based on this
+information, this is the best performing model yet and it is the least
+complex model so far as it has the lowest number of predictor variables.
 
-Another Lasso Regression was preformed to see if there are still predictors that can be removed without sacrificing the accuracy of the model.  This time the lambda used was 1.75*lambda.1se which forces even more predictor variables to zero.  With this penalty, the model was reduced from 33 predictors down to 28 predictors.  The test RMSE increased slightly to 5.2553, the test MAE slightly increased to 4.1075 and the test MAPE = 11.21 percent.  The optimal lambda is 0.576584.  Even though there was a slight increase in the test RMSE and MAE, another Lasso was performed to evaluate the number of variables that would be reduced at the cost of losing accuracy.
+Another Lasso Regression was preformed to see if there are still
+predictors that can be removed without sacrificing the accuracy of the
+model. This time the lambda used was 1.75\*lambda.1se which forces even
+more predictor variables to zero. With this penalty, the model was
+reduced from 33 predictors down to 28 predictors. The test RMSE
+increased slightly to 5.2553, the test MAE slightly increased to 4.1075
+and the test MAPE = 11.21 percent. The optimal lambda is 0.576584. Even
+though there was a slight increase in the test RMSE and MAE, another
+Lasso was performed to evaluate the number of variables that would be
+reduced at the cost of losing accuracy.
 
-This sixth Lasso Regression brought the total variables down to 22.  While the test RMSE, test MAE and test MAPE all had slight increases, this was not sufficient to stop another Lasso Regression as the simplest model with the best accuracy is the objective.  The lambda for the sixth Lasso Regression is 1.195034, test RMSE = 5.5280, test MAE = 4.1075 which is unchanged from the last lasso and test MAPE = 12.14.
+This sixth Lasso Regression brought the total variables down to 22.
+While the test RMSE, test MAE and test MAPE all had slight increases,
+this was not sufficient to stop another Lasso Regression as the simplest
+model with the best accuracy is the objective. The lambda for the sixth
+Lasso Regression is 1.195034, test RMSE = 5.5280, test MAE = 4.1075
+which is unchanged from the last lasso and test MAPE = 12.14.
 
-The seventh Lasso Regression reduced the model from 22 predictor variables to 19 predictor variables but the most important change was in the R2 value which dropped below 70% on the test data for the first time.  Due to the drop of R2 and the increase in the test RMSE, test MAE and test MAPE, the threshold benefit of dropping variables at the cost of accuracy has been reached and no more reduction of predictor variables will be done on the model.  Here is the summary table of all of the models:
+The seventh Lasso Regression reduced the model from 22 predictor
+variables to 19 predictor variables but the most important change was in
+the R2 value which dropped below 70% on the test data for the first
+time. Due to the drop of R2 and the increase in the test RMSE, test MAE
+and test MAPE, the threshold benefit of dropping variables at the cost
+of accuracy has been reached and no more reduction of predictor
+variables will be done on the model. Here is the summary table of all of
+the models:
 
 ```{r}
 # ------------------------------------------------------------------------------
@@ -1305,11 +1493,21 @@ html_model_comparison %>%
 
 ```
 
+Based on the test RMSE, test MAE, test R2, Test Normalized MAE and test
+MAPE, the model with 33 predictor variables is the best model of all to
+predict Total SPAI Score. Model 33 has the test RMSE = 5.1626 which is
+the lowest error rate of all models considered so far. The model also
+explains 74.98% of the variance in unseen test data. This model has also
+seen a 59.25% reduction in complexity when compared to the baseline
+model which is very significant. By removing those 48 variables the
+overall performance of the model significantly increased. However, by
+removing any additional variables, the prediction accuracy of the model
+is reduced so the overall best performing model is the model with 33
+variables.
 
-
-Based on the test RMSE, test MAE, test R2, Test Normalized MAE and test MAPE, the model with 33 predictor variables is the best model of all to predict Total SPAI Score.  Model 33 has the test RMSE = 5.1626 which is the lowest error rate of all models considered so far.  The model also explains 74.98% of the variance in unseen test data.  This model has also seen a 59.25% reduction in complexity when compared to the baseline model which is very significant.  By removing those 48 variables the overall performance of the model significantly increased.  However, by removing any additional variables, the prediction accuracy of the model is reduced so the overall best performing model is the model with 33 variables.
-
-Below are the variables that were selected in the optimal model with the most influential at the top and displayed in decreasing order as the influence decreases.  :
+Below are the variables that were selected in the optimal model with the
+most influential at the top and displayed in decreasing order as the
+influence decreases. :
 
 ```{r}
 # Load ggplot2 for a high-quality visualization
@@ -1375,10 +1573,17 @@ coef_plot <- ggplot(plot_df, aes(x = Dummy_Variable, y = Coefficient, fill = Dir
 print(coef_plot)
 ```
 
+After performing the lasso regression and reducing the model to only 19
+variables, additional analysis continued. With the optimal model
+containing 33 questions that can be used to predict cellphone addition,
+Ordinary Least Squares was applied to just the top five influential
+predictor variables from the 33 Variable Lasso Regression model as well
+as the 52 lambda.min Lasso Regression model as the results from that
+model were very close to the 33 variable model. An interesting
+observation is that the top five variables from the 52 lambda.min model
+were the exact same top five as the 22 variable model.
 
-After performing the lasso regression and reducing the model to only 19 variables, additional analysis continued.  With the optimal model containing 33 questions that can be used to predict cellphone addition, Ordinary Least Squares was applied to just the top five influential predictor variables from the 33 Variable Lasso Regression model as well as the 52 lambda.min Lasso Regression model as the results from that model were very close to the 33 variable model.  An interesting observation is that the top five variables from the 52 lambda.min model were the exact same top five as the 22 variable model.  
-
-Here is a table that summarizes the results of all models:  
+Here is a table that summarizes the results of all models:
 
 ```{r}
  #==============================================================================
@@ -1554,21 +1759,33 @@ mega_dynamic_comparison %>%
 
 ```
 
-Both models with only five variables performed very well with the top five variables from the 33 variable model accounting for 65.98% of the variances of unseen data which is remarkable high for a real model using only five variables.  
-This study substantiates that if you were only able to conduct a short, five question survey, that the five questions that you should ask are:  
+Both models with only five variables performed very well with the top
+five variables from the 33 variable model accounting for 65.98% of the
+variances of unseen data which is remarkable high for a real model using
+only five variables.\
+This study substantiates that if you were only able to conduct a short,
+five question survey, that the five questions that you should ask are:
 
-1.	Even when I think I should stop using my mobile phone, I will continue to use it and cannot stop.
-2.	It has become a habit of me to spend a lot of time on my mobile phone.
-3.	I feel very panic when I can’t use my mobile phone.
-4.	I don’t get enough sleep and feel tired from using mobile phone too much.
-5.	Playing mobile phone has affected my academic performance.  
+1.  Even when I think I should stop using my mobile phone, I will
+    continue to use it and cannot stop.
+2.  It has become a habit of me to spend a lot of time on my mobile
+    phone.
+3.  I feel very panic when I can’t use my mobile phone.
+4.  I don’t get enough sleep and feel tired from using mobile phone too
+    much.
+5.  Playing mobile phone has affected my academic performance.
 
-These questions are the strongest indicator of cell phone addition.  
-
+These questions are the strongest indicator of cell phone addition.
 
 #### LASSO regression for SPAI total
 
-We fit plain LASSO (`glmnet`, `alpha = 1`, Gaussian family) and group LASSO (`grpreg`, scales as groups) on the training set with 10-fold cross-validation to select $\lambda$. Test-set performance is reported with $R^2$ and RMSE (Equation 3). Following our Methods section, we emphasize **plain LASSO at `lambda.1se`** as the recommended model: it achieves strong predictive accuracy while retaining far fewer predictors than group LASSO at comparable $R^2$ [@james2013; @huang2024].
+We fit plain LASSO (`glmnet`, `alpha = 1`, Gaussian family) and group
+LASSO (`grpreg`, scales as groups) on the training set with 10-fold
+cross-validation to select $\lambda$. Test-set performance is reported
+with $R^2$ and RMSE (Equation 3). Following our Methods section, we
+emphasize **plain LASSO at `lambda.1se`** as the recommended model: it
+achieves strong predictive accuracy while retaining far fewer predictors
+than group LASSO at comparable $R^2$ [@james2013; @huang2024].
 
 ```{r modeling-setup, warning=FALSE, message=FALSE}
 library(glmnet)
@@ -1662,14 +1879,26 @@ scale_counts <- sel_plain %>%
 names(scale_counts) <- c("Scale", "N_items")
 ```
 
-On the held-out test set ($n = `r nrow(mm_reg$x) - length(train_index)`$), plain LASSO at`lambda.1se`achieved $R^2 =`r gauss_results$R2[1]`$ and RMSE $= `r gauss_results$RMSE[1]`$, selecting`r gauss_results$N_selected[1]`predictors. Group LASSO at`lambda.min`reached a similar $R^2 =`r gauss_results$R2[2]`$ but retained `r gauss_results$N_selected[2]` predictors—substantially more complexity for little additional explanatory gain. In practical terms, the non-SPAI scales explain roughly three-quarters of the variation in SPAI total severity on respondents the model had not seen during training.
+On the held-out test set ($n = `r nrow(mm_reg$x) - length(train_index)`$),
+plain LASSO at `lambda.1se` achieved $R^2 = `r gauss_results$R2[1]`$ and
+RMSE $= `r gauss_results$RMSE[1]`$, selecting `r gauss_results$N_selected[1]`
+predictors. Group LASSO at `lambda.min` reached a similar $R^2 = `r gauss_results$R2[2]`$
+but retained `r gauss_results$N_selected[2]` predictors—substantially more
+complexity for little additional explanatory gain. In practical terms, the
+non-SPAI scales explain roughly three-quarters of the variation in SPAI total
+severity on respondents the model had not seen during training.
 
 ```{r tbl-gaussian, tbl.cap="Gaussian LASSO models predicting SPAI total from non-SPAI items (test set)."}
 kable(gauss_results, align = c("l", "r", "r", "r"),
       col.names = c("Model", "R²", "RMSE", "Predictors selected"))
 ```
 
-Item-level plain LASSO selection was concentrated in **SAPS** (addiction proneness) and **SAS** (cognitive and behavioral addiction symptoms). Nomophobia (NMP) contributed few or no items once these stronger scales were penalized into the model, consistent with the weaker zero-order correlation observed in exploration. Demographics played a minor role relative to the addiction instrument items.
+Item-level plain LASSO selection was concentrated in **SAPS** (addiction
+proneness) and **SAS** (cognitive and behavioral addiction symptoms).
+Nomophobia (NMP) contributed few or no items once these stronger scales
+were penalized into the model, consistent with the weaker zero-order
+correlation observed in exploration. Demographics played a minor role
+relative to the addiction instrument items.
 
 ```{r fig-selected-scales, fig.cap="Number of item-level predictors selected by plain LASSO (lambda.1se), grouped by instrument."}
 ggplot(scale_counts, aes(x = reorder(Scale, N_items), y = N_items, fill = Scale)) +
@@ -1683,16 +1912,62 @@ ggplot(scale_counts, aes(x = reorder(Scale, N_items), y = N_items, fill = Scale)
 
 ```
 
-These results align with the exploratory correlation structure: SAS and SAPS track SPAI total most closely, and LASSO uses that shared variance efficiently while zeroing out redundant nomophobia items. The high test $R^2$ should be interpreted as **convergent validity** among overlapping addiction measures rather than evidence of causal effects [@gao2024; @lin2014].
+These results align with the exploratory correlation structure: SAS and
+SAPS track SPAI total most closely, and LASSO uses that shared variance
+efficiently while zeroing out redundant nomophobia items. The high test
+$R^2$ should be interpreted as **convergent validity** among overlapping
+addiction measures rather than evidence of causal effects [@gao2024;
+@lin2014].
 
 ## Conclusion
 
-This study applied iterative LASSO variable reduction to a Chinese Computer Adaptive Testing item bank on problematic mobile phone use [@gao2024] in order to predict continuous SPAI total severity from non-SPAI instrument items and demographics, with SPAI items excluded from the predictor set to avoid circularity. Beginning with 81 candidates, Phase 1 selection at `lambda.min` retained 52 predictors; Phase 2 escalation to `lambda.1se` yielded a 33-predictor model that achieved the most favorable balance of test error and complexity. That preferred specification attained a test RMSE of 5.16 and a test $R^2$ of 0.75 on held-out respondents, corresponding to an approximate 59% reduction in predictor count relative to the full baseline. Further shrinkage to 28, 22, and 19 predictors degraded predictive accuracy—with test $R^2$ falling below 0.70 at 19 predictors—and therefore activated the stopping rule. Plain LASSO was preferred to group LASSO, which attained comparable $R^2$ only by retaining substantially more predictors.
+This study applied iterative LASSO variable reduction to a Chinese
+Computer Adaptive Testing item bank on problematic mobile phone use
+[@gao2024] in order to predict continuous SPAI total severity from
+non-SPAI instrument items and demographics, with SPAI items excluded
+from the predictor set to avoid circularity. Beginning with 81
+candidates, Phase 1 selection at `lambda.min` retained 52 predictors;
+Phase 2 escalation to `lambda.1se` yielded a 33-predictor model that
+achieved the most favorable balance of test error and complexity. That
+preferred specification attained a test RMSE of 5.16 and a test $R^2$ of
+0.75 on held-out respondents, corresponding to an approximate 59%
+reduction in predictor count relative to the full baseline. Further
+shrinkage to 28, 22, and 19 predictors degraded predictive accuracy—with
+test $R^2$ falling below 0.70 at 19 predictors—and therefore activated
+the stopping rule. Plain LASSO was preferred to group LASSO, which
+attained comparable $R^2$ only by retaining substantially more
+predictors.
 
-Selected items concentrated in SAPS (addiction proneness) and SAS (cognitive and behavioral addiction symptoms), with a smaller contribution from MPATS; NMP (nomophobia) items were largely driven to zero, consistent with nomophobia’s weaker zero-order association with SPAI total. A post-LASSO ordinary least squares refit on the five largest-magnitude items retained a test $R^2$ of 0.66—well below the 33-item model’s 0.75, yet still high for a five-item instrument. Those five items capture compulsive use, habitual time spent, panic upon separation, sleep loss, and impaired academic performance, spanning loss of control, salience, withdrawal, and life interference.
+Selected items concentrated in SAPS (addiction proneness) and SAS
+(cognitive and behavioral addiction symptoms), with a smaller
+contribution from MPATS; NMP (nomophobia) items were largely driven to
+zero, consistent with nomophobia’s weaker zero-order association with
+SPAI total. A post-LASSO ordinary least squares refit on the five
+largest-magnitude items retained a test $R^2$ of 0.66—well below the
+33-item model’s 0.75, yet still high for a five-item instrument. Those
+five items capture compulsive use, habitual time spent, panic upon
+separation, sleep loss, and impaired academic performance, spanning loss
+of control, salience, withdrawal, and life interference.
 
-The elevated $R^2$ is most appropriately interpreted as convergent validity among overlapping addiction instruments rather than as evidence of causal effects [@gao2024; @lin2014; @james2013]. Inter-scale correlations frequently exceeding $r = 0.60$ produce the multicollinearity that motivated LASSO over unregularized ordinary least squares [@mcneish2015]. Because the sample was collected in China among predominantly young adults (mean age $= 18.8$ years) and contained more female than male respondents, the findings should not be generalized to other populations without external validation [@gao2024]. Practically, the 33-item LASSO model—and, where brevity is essential, the five-item OLS subset—can estimate SPAI-like severity without administering the full multi-instrument battery, subject to prospective validation.
+The elevated $R^2$ is most appropriately interpreted as convergent
+validity among overlapping addiction instruments rather than as evidence
+of causal effects [@gao2024; @lin2014; @james2013]. Inter-scale
+correlations frequently exceeding $r = 0.60$ produce the
+multicollinearity that motivated LASSO over unregularized ordinary least
+squares [@mcneish2015]. Because the sample was collected in China among
+predominantly young adults (mean age $= 18.8$ years) and contained more
+female than male respondents, the findings should not be generalized to
+other populations without external validation [@gao2024]. Practically,
+the 33-item LASSO model—and, where brevity is essential, the five-item
+OLS subset—can estimate SPAI-like severity without administering the
+full multi-instrument battery, subject to prospective validation.
 
-Future work should assess robustness across alternative train–test splits and random seeds, validate the short-form item sets in independent samples, revisit the imbalanced categorical outcome SPAI item 12 with methods suited to class imbalance, and extend the analysis beyond the Chinese young-adult cohort in order to distinguish context-specific from more universal predictors of smartphone addiction severity.
+Future work should assess robustness across alternative train–test
+splits and random seeds, validate the short-form item sets in
+independent samples, revisit the imbalanced categorical outcome SPAI
+item 12 with methods suited to class imbalance, and extend the analysis
+beyond the Chinese young-adult cohort in order to distinguish
+context-specific from more universal predictors of smartphone addiction
+severity.
 
 ## References

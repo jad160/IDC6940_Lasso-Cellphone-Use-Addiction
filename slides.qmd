@@ -9,7 +9,7 @@ format:
     slide-number: true
     chalkboard: false
 course: Capstone Projects in Data Science
-#bibliography: references.bib
+bibliography: references.bib
 self-contained: true
 execute:
   warning: false
