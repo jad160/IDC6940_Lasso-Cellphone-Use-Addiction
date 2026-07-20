@@ -139,7 +139,7 @@ scale_counts <- sel_plain %>%
   as.data.frame(stringsAsFactors = FALSE)
 names(scale_counts) <- c("Scale", "N_items")
 ```
-## Project Overview
+## Project Overview {.smaller}
 
 Using LASSO Regression to Predict Cell Phone Addiction
 
@@ -153,7 +153,7 @@ Research Question
 
 Which behavioral and demographic factors are the strongest predictors of cell phone addiction?
 
-## Introduction and Literature Review
+## Introduction and Literature Review {.smaller}
 
 Background
 
@@ -166,7 +166,7 @@ Background
      - Lower academic performance
      - Reduced productivity
 
-## Introduction and Literature Review
+## Introduction and Literature Review {.smaller}
 
 Previous studies consistently show that:
 
@@ -177,7 +177,7 @@ Previous studies consistently show that:
 
 Few studies use LASSO regression to determine which predictors truly matter most when many variables are considered simultaneously. [@Busch2021]
 
-## What is LASSO?
+## What is LASSO? {.smaller}
 
 LASSO Regression (Least Absolute Shrinkage and Selection Operator) is a machine learning technique that:
 
@@ -186,7 +186,7 @@ LASSO Regression (Least Absolute Shrinkage and Selection Operator) is a machine 
  - Removes unnecessary variables
  - Produces a simpler, more interpretable model
 
-## Why LASSO?
+## Why LASSO? {.smaller}
 
  - Prevents overfitting
  - Handles datasets with many predictors
@@ -197,7 +197,7 @@ Simple Visualization:
 
 Many Variables -> LASSO Penalty -> Only Important Variables Remain
 
-## The Problem
+## The Problem {.smaller}
 
 There are many possible factors that may influence cell phone addiction:
 
@@ -211,7 +211,7 @@ There are many possible factors that may influence cell phone addiction:
  - Lifestyle factors
 
 
-## The Problem
+## The Problem {.smaller}
 
 Smartphone use has shifted from convenience to dependency.
 
@@ -219,8 +219,7 @@ Smartphone use has shifted from convenience to dependency.
 - Links to anxiety, sleep loss, and academic strain [@lin2014]
 - Dozens of overlapping survey variables → multicollinearity [@james2013]
 
-
-## Why This Project Matters
+Why This Project Matters
 
  - Demonstrates an application of machine learning in behavioral research.
  - Identifies the strongest predictors of cell phone addiction.
@@ -228,7 +227,7 @@ Smartphone use has shifted from convenience to dependency.
  - Results may help guide future interventions and prevention efforts.
 
 
-## Our Data
+## Our Data {.smaller}
 
 Survey data collected in **China** using a Computer Adaptive Testing (CAT)
 item bank [@gao2024] — **$n = 1{,}619$** complete cases
@@ -244,7 +243,7 @@ item bank [@gao2024] — **$n = 1{,}619$** complete cases
 
 Plus age, gender, and grade (mean age $= 18.8$; 991 F / 628 M).
 
-## Outcome & Approach
+## Outcome & Approach {.smaller}
 
 **Primary outcome:** SPAI total — sum of 20 SPAI items (20–80; mean $= 41.8$)
 
@@ -263,18 +262,18 @@ $$
 $$
 
 
-## A Two-Phase Iterative Procedure
+## A Two-Phase Iterative Procedure {.smaller}
 
 ::: columns
 ::: {.column width="50%"}
-### Phase 1 — Select & Validate
+### Phase 1 — Select & Validate {.smaller}
 
 - Fit LASSO at `lambda.min`; drop zero-coefficient predictors
 - Refit the survivors at the **same** `lambda.min` confirming the first fit already removed the noise and lets coefficients re-adjust.
 :::
 
 ::: {.column width="50%"}
-### Phase 2 — Escalating Search
+### Phase 2 — Escalating Search {.smaller}
 
 - Switch to `lambda.1se`, which drops predictors more aggressively and refit
 - Repeat: raise the penalty to a **larger multiple** of `lambda.1se`, refit, and check metrics with each next multiple chosen only *after* seeing the prior refit's results
@@ -284,7 +283,7 @@ $$
 
 ---
 
-## Model Selection Rule
+## Model Selection Rule {.smaller}
 
 Every candidate fit across **both phases** is compared on test RMSE, MAE, R², and MAPE.
 
@@ -296,7 +295,7 @@ Every candidate fit across **both phases** is compared on test RMSE, MAE, R², a
 
 ---
 
-## Model Evaluation Metrics
+## Model Evaluation Metrics {.smaller}
 
 ::: {}
 - **R²** — Proportion of test set variance in SPAI explained by model
@@ -310,12 +309,12 @@ Every candidate fit across **both phases** is compared on test RMSE, MAE, R², a
 
 ---
 
-## Tuning Criteria
+## Tuning Criteria {.smaller}
 
 How each refit was penalized
 
 
-#### Penalty Selection
+#### Penalty Selection {.smaller}
 
 ::: {}
 **`lambda.min`**
@@ -333,7 +332,7 @@ Applied on later refits, each multiple chosen adaptively after reviewing the pri
 
 ---
 
-## SPAI Severity in the Sample
+## SPAI Severity in the Sample {.smaller}
 
 ```{r fig-spai-dist}
 #| fig-width: 9
@@ -353,7 +352,7 @@ ggplot(dat, aes(x = SPAI_total)) +
   )
 ```
 
-## Strongest Correlation: SAS vs SPAI
+## Strongest Correlation: SAS vs SPAI {.smaller}
 
 SAS ($r = 0.81$) > SAPS / MPATS ($r = 0.71$) > MPAS ($r = 0.65$) > NMP ($r = 0.55$)
 
@@ -377,7 +376,7 @@ ggplot(dat, aes(x = SAS_total, y = SPAI_total)) +
   )
 ```
 
-## Convergent Validity & Multicollinearity
+## Convergent Validity & Multicollinearity {.smaller}
 
 All six scale totals move together (inter-scale $r$ often exceeds 0.60) — motivates LASSO over OLS.
 
@@ -405,7 +404,7 @@ ggplot(corr_long, aes(x = Scale2, y = Scale1, fill = r)) +
   labs(x = NULL, y = NULL, fill = "r", title = "Scale Total Correlations")
 ```
 
-## Patterns Before Modeling
+## Patterns Before Modeling {.smaller}
 
 - **SPAI item 12** highly imbalanced — rarest category $= 5.7\%$ of sample
 - **NMP** highest mean endorsement ($= 68.8\%$ of max) but **weakest** SPAI correlation
@@ -427,7 +426,7 @@ p_gender <- dat %>% count(gender_lab) %>%
 p_age + p_gender + plot_layout(widths = c(2, 1))
 ```
 
-## Data Preprocessing
+## Data Preprocessing {.smaller}
 
 - $n = 1{,}619$ complete cases; no listwise missingness
 - SPAI total = sum of 20 SPAI items; other SPAI items removed from predictors
@@ -436,7 +435,7 @@ p_age + p_gender + plot_layout(widths = c(2, 1))
 
 
 
-## Model Fit: Actual vs. Predicted Total SPAI Score
+## Model Fit: Actual vs. Predicted Total SPAI Score {.smaller}
 
 ```{r}
 #| echo: false
@@ -586,7 +585,7 @@ legend(
 
 <center>
 
-## Lasso Model Comparison Table
+## Lasso Model Comparison Table {.smaller}
 
 </center>
 
@@ -1508,7 +1507,7 @@ test_comparison %>%
   )
 ```
 
-## Final Lasso Regression Model
+## Final Lasso Regression Model {.smaller}
 
 ```{r}
 # Load ggplot2 for a high-quality visualization
@@ -1574,7 +1573,7 @@ coef_plot <- ggplot(plot_df, aes(x = Dummy_Variable, y = Coefficient, fill = Dir
 print(coef_plot)
 ```
 
-##  Optimal Number of Predictor Variables
+##  Optimal Number of Predictor Variables {.smaller}
 
 ```{r}
 # MODIFIED: Saved with a clear, specific filename for your final chosen 33-variable model
@@ -1601,7 +1600,7 @@ plot(cv_lasso)
 
 ```
 
-## Final Model Selection for Real Life Application
+## Final Model Selection for Real Life Application {.smaller}
 ```{r}
 # ==============================================================================
 # 1. ISOLATE TARGET AND SELECTED PREDICTORS (TOP 5 OF 22 CONFIGURATION)
@@ -1785,7 +1784,7 @@ mega_dynamic_comparison %>%
   )
 ```
 
-## Questions to ask
+## Questions to ask {.smaller}
 
 1. Even when I think I should stop using my mobile phone, I will continue to use it and cannot stop.
 2. It has become a habit of me to spend a lot of time on my mobile phone.
@@ -1793,49 +1792,23 @@ mega_dynamic_comparison %>%
 4. I don’t get enough sleep and feel tired from using mobile phone too much.
 5. Playing mobile phone has affected my academic performance.  
 
-## Gaussian LASSO Results
-
-Test set $n = `r nrow(mm_reg$x) - length(train_index)`$
-
-```{r tbl-gaussian}
-kable(gauss_results, align = c("l", "r", "r", "r"),
-      col.names = c("Model", "R²", "RMSE", "Predictors selected"))
 ```
 
-Plain LASSO at `lambda.1se`: $R^2 = `r gauss_results$R2[1]`$, RMSE $= `r gauss_results$RMSE[1]`$, **`r gauss_results$N_selected[1]`** predictors
-
-Group LASSO at `lambda.min`: $R^2 = `r gauss_results$R2[2]`$, **`r gauss_results$N_selected[2]`** predictors — more complexity, little extra gain
-
-## Plain LASSO Selected Predictors
-
-**SAPS** and **SAS** dominate · **NMP** contributes little · demographics minor
-
-```{r fig-selected-scales}
-#| fig-width: 8
-#| fig-height: 4.5
-
-ggplot(scale_counts, aes(x = reorder(Scale, N_items), y = N_items, fill = Scale)) +
-  geom_col(show.legend = FALSE) +
-  coord_flip() +
-  labs(x = NULL, y = "Selected items",
-       title = "Plain LASSO Selected Predictors by Scale")
-```
-
-## Conclusion
+## Conclusion {.smaller}
 
 - Iterative LASSO on Chinese CAT bank [@gao2024]: predict SPAI total from non-SPAI items + demographics
 - 81 → 52 (`lambda.min`) → **33** (`lambda.1se`): best balance of test error and complexity
 - Test RMSE $= 5.16$, test $R^2 = 0.75$ (~59% fewer predictors than baseline)
 - Further shrinkage (28 / 22 / 19) degraded accuracy ($R^2 < 0.70$ at 19) → stopping rule
 
-## Conclusion (continued)
+## Conclusion (continued) {.smaller}
 
 - **SAPS** and **SAS** dominate; smaller MPATS role; **NMP** largely zeroed out
 - Post-LASSO OLS on five items: test $R^2 = 0.66$ (below 0.75, strong for five items)
 - Those items: compulsive use, habitual time spent, separation panic, sleep loss, academic interference
 - High $R^2$ = **convergent validity**, not causation [@gao2024; @lin2014; @james2013]
 
-## China & Generalizability
+## China & Generalizability {.smaller}
 
 Sample collected in **China** among predominantly young adults (mean age $= 18.8$), more female than male [@gao2024]
 
@@ -1843,11 +1816,11 @@ Sample collected in **China** among predominantly young adults (mean age $= 18.8
 - Do not generalize without external validation
 - 33-item LASSO—and, where brevity matters, the five-item OLS subset—can estimate SPAI-like severity pending prospective validation
 
-## Future Work
+## Future Work {.smaller}
 
 - Robustness across train–test splits and random seeds
 - Validate short-form item sets in independent samples
 - Revisit imbalanced SPAI item 12 with class-imbalance-appropriate methods
 - Extend beyond the Chinese young-adult cohort to separate context-specific from universal predictors
 
-## References
+## References {.smaller}
