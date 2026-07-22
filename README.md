@@ -7,14 +7,14 @@ Advisor: Dr. Cohen
 
 ## Project overview
 
-We study **problematic mobile phone use** with survey data from a Computer
+We study **problematic smartphone use (PSU)** with survey data from a Computer
 Adaptive Testing (CAT) item bank collected in China (Gao et al., 2024). The
-main question: **which non-SPAI scales and demographics best predict overall
-smartphone-addiction severity**, measured as **SPAI total** (sum of all 20
-SPAI items)?
+central question: **which non-SPAI scales and demographics best predict overall
+smartphone-addiction severity**, measured as continuous **SPAI total** (sum of
+all 20 SPAI items)?
 
-The dataset has **1,619** respondents with complete data on six instrument
-families plus demographics:
+The dataset has **1,619** complete cases across six instrument families plus
+demographics:
 
 | Abbreviation | Scale |
 |--------------|-------|
@@ -25,126 +25,113 @@ families plus demographics:
 | MPATS | Mobile Phone Addiction Tendency Scale |
 | SAS | Smartphone Addiction Scale (SAS_C / SAS_CA items) |
 
-SPAI items are excluded from predictors when modeling SPAI total so the
-outcome is not built from its own inputs. A secondary categorical outcome,
-**SPAI item 12**, captures perceived negative impact on study or work.
+SPAI items are excluded from predictors when modeling SPAI total to avoid
+circularity. Background on PSU antecedents draws on Busch and McCarthy (2021);
+the SPAI instrument is Lin et al. (2014).
 
-## Methods
+## Report contents (`index.qmd`)
 
-With dozens of correlated survey items, ordinary least squares tends to
-overfit under multicollinearity. **LASSO** adds an \(L_1\) penalty that
-shrinks weak coefficients to exactly zero and performs automatic variable
-selection (Tibshirani, 1996; James et al., 2013).
+1. **Introduction** — PSU context, multicollinearity, motivation for LASSO  
+2. **Methods** — OLS vs LASSO, \(\lambda\) tuning, **iterative LASSO** reduction,
+   post-LASSO OLS short form  
+3. **Analysis and Results** — EDA, iterative model comparison, preferred
+   33-predictor model, five-item OLS subset  
+4. **Conclusion** — findings, China / young-adult generalizability, future work  
+5. **References** — `references.bib`
 
-Models use an **80/20 train/test split** (stratified on `SPAI_12`). \(\lambda\)
-is tuned with 10-fold cross-validation; we report both **`lambda.min`** and
-**`lambda.1se`**.
+Companion deck: `slides.qmd` → `slides.html`.
 
-### Iterative LASSO variable reduction
+## Methods (summary)
 
-Rather than a single fit, the paper uses a **two-phase iterative refitting**
-procedure:
+With dozens of correlated survey items, OLS tends to overfit.
+**LASSO** (\(L_1\) penalty) shrinks weak coefficients to zero and selects
+variables (Tibshirani, 1996; James et al., 2013).
 
-1. **Phase 1** — Fit Gaussian LASSO at `lambda.min`, retain nonzero predictors
-   (81 → 52), then refit on survivors for a stability check.
-2. **Phase 2** — Escalate to `lambda.1se` and successively larger multiples of
-   that penalty, refitting after each step and monitoring test RMSE, MAE,
-   \(R^2\), and MAPE until further shrinkage meaningfully degrades accuracy.
+- **80/20** train/test split (stratified on `SPAI_12`)
+- 10-fold CV for \(\lambda\); report **`lambda.min`** and **`lambda.1se`**
 
-Candidates across both phases are compared on held-out metrics; when scores
-are near-equivalent, the more parsimonious model is preferred.
+### Iterative LASSO
+
+1. **Phase 1** — Gaussian LASSO at `lambda.min` (81 → 52 predictors), then a
+   stability refit on survivors  
+2. **Phase 2** — Escalate to `lambda.1se` and larger multiples of that penalty,
+   tracking test RMSE, MAE, \(R^2\), and MAPE until further shrinkage hurts
+   accuracy  
+
+Among candidates, prefer the strongest held-out metrics; break ties toward
+parsimony.
 
 ### Post-LASSO OLS
 
-From the selected LASSO model, the **five largest-magnitude** predictors are
-refit with ordinary least squares on the same split to assess a short-form
-instrument.
+Refit OLS on the **five largest-magnitude** predictors from the preferred
+LASSO model (short-form screen).
 
 ## Key findings
 
-- Preferred model: **33 predictors** (`lambda.1se` after Phase 2) — test
-  RMSE \(= 5.16\), test \(R^2 = 0.75\) (~59% fewer predictors than the
-  81-variable baseline)
+- Preferred model: **33 predictors** — test RMSE \(= 5.16\), test \(R^2 = 0.75\)
+  (~59% fewer predictors than the 81-variable baseline)
 - Further shrinkage to 28 / 22 / 19 predictors degraded accuracy
-  (\(R^2 < 0.70\) at 19) and activated the stopping rule
-- Selected items concentrate in **SAPS** and **SAS**; smaller **MPATS** role;
-  **NMP** largely zeroed out
-- Post-LASSO OLS on five items: test \(R^2 = 0.66\) (strong for a five-item
-  screen, below the 33-item model)
-- High \(R^2\) is best read as **convergent validity** among overlapping
-  addiction instruments, not causation
-- Sample is Chinese young adults (mean age \(= 18.8\); more female than male);
-  findings should not be generalized without external validation
+  (\(R^2 < 0.70\) at 19)
+- **SAPS** and **SAS** dominate; smaller **MPATS** role; **NMP** largely zeroed out
+- Five-item post-LASSO OLS: test \(R^2 = 0.66\) (strong for five items; below 0.75)
+- High \(R^2\) = **convergent validity** among overlapping instruments, not causation
+- Sample: Chinese young adults (mean age \(= 18.8\); more female than male) —
+  do not generalize without external validation
+
+**Future work** (as in the paper): robustness across splits/seeds, short-form
+validation, more systematic **group LASSO**, and extension beyond the Chinese
+young-adult cohort.
 
 ## Data exploration (highlights)
 
-From `index.qmd`:
-
 - SPAI total: mean \(\approx 41.8\) (\(SD \approx 10.2\)) on a 20–80 scale
-- Strongest zero-order correlate with SPAI total: **SAS** (\(r \approx 0.81\));
-  then **SAPS** / **MPATS** (\(r \approx 0.71\)), **MPAS** (\(r \approx 0.65\));
-  **NMP** weakest (\(r \approx 0.55\)) despite high endorsement
-- All six scales are highly intercorrelated (convergent validity +
-  multicollinearity)
-- **SPAI item 12** is class-imbalanced (~6% in the rarest category)
+- Strongest correlate with SPAI total: **SAS** (\(r \approx 0.81\)); then
+  **SAPS** / **MPATS** (\(\approx 0.71\)), **MPAS** (\(\approx 0.65\));
+  **NMP** weakest (\(\approx 0.55\))
+- Scales are highly intercorrelated (convergent validity + multicollinearity)
 
 ## Repository structure
 
 ```
-├── index.qmd              # Capstone report (full narrative + analysis)
-├── index.html             # Rendered report
-├── slides.qmd             # Presentation slides
-├── slides.html            # Rendered slides
-├── references.bib         # Bibliography
-├── data/                  # Survey CSV and item-bank documentation
-├── research/              # Literature reviews and background reading
-├── scripts/               # Supporting EDA and analysis notebooks
-└── instructions/          # Course template files
+├── index.qmd / index.html     # Capstone report
+├── slides.qmd / slides.html   # Presentation
+├── references.bib             # Bibliography
+├── data/                      # CAT CSV + item-bank docs
+├── scripts/                   # Supporting EDA / analysis notebooks
+├── research/                  # Background reading
+└── instructions/              # Course templates
 ```
 
 ## Data
 
-- `data/DATA_Problematic Mobile Phone Use CAT.csv` — 1,619 respondents, 101
-  variables (demographics + survey items)
-- `data/ITEM BANK_Problematic Mobile Phone CAT.docx` — item bank documentation
+- `data/DATA_Problematic Mobile Phone Use CAT.csv` — 1,619 × 101  
+- `data/ITEM BANK_Problematic Mobile Phone CAT.docx` — item documentation  
 
-Source: Gao et al. (2024), *Data in Brief* — CAT-PMPU item bank and dataset.
+Source: Gao et al. (2024), *Data in Brief*.
 
-Rendering `index.qmd` / `slides.qmd` expects a working copy named
-`cellphone.csv` in the project root (copy from the CAT CSV if needed).
+Rendering expects `cellphone.csv` in the project root (copy from the CAT CSV
+if needed).
 
 ## Running the analysis
 
-**Capstone report:**
-
 ```bash
-quarto render index.qmd
+quarto render index.qmd    # → index.html
+quarto render slides.qmd   # → slides.html
 ```
 
-Output: `index.html`
-
-**Presentation slides:**
-
-```bash
-quarto render slides.qmd
-```
-
-Output: `slides.html`
-
-**Exploratory visualizations:**
+Optional EDA notebooks:
 
 ```bash
 quarto render scripts/jad160_visualizations.qmd
 quarto render scripts/phone_use_visualizations.qmd
 ```
 
-Requires R packages including: `tidyverse`, `glmnet`, `grpreg`, `caret`,
-`knitr`, `kableExtra`, `patchwork`, `ggplot2`.
+R packages used include: `tidyverse`, `glmnet`, `caret`, `knitr`,
+`kableExtra`, `patchwork`, `ggplot2` (and `grpreg` if rendering older
+group-LASSO slide chunks).
 
 ## Viewing the report
 
-Published via GitHub Pages:
+GitHub Pages:
 
 **https://jad160.github.io/IDC6940_Lasso-Cellphone-Use-Addiction/**
-
-Open `slides.html` locally for the team presentation deck.

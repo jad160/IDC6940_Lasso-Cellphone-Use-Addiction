@@ -175,7 +175,7 @@ Previous studies consistently show that:
  - Social media and entertainment apps are major contributors.
  - Many studies rely on traditional regression methods.
 
-Few studies use LASSO regression to determine which predictors truly matter most when many variables are considered simultaneously. [@Busch2021]
+Few studies use LASSO regression to determine which predictors truly matter most when many variables are considered simultaneously. [@busch2021]
 
 ## What is LASSO? {.smaller}
 
