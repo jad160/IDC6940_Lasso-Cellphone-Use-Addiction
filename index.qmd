@@ -1516,6 +1516,88 @@ removing any additional variables, the prediction accuracy of the model
 is reduced so the overall best performing model is the model with 33
 variables.
 
+```{r}
+# ==============================================================================
+# 5. RESIDUAL DIAGNOSTIC PLOT - LASSO lambda.1se MODEL
+# ==============================================================================
+
+# Calculate residuals
+residuals_1se <- y_test - pred_test_1se
+
+# Create residual dataframe
+residual_df_1se <- data.frame(
+  Observed = y_test,
+  Predicted = pred_test_1se,
+  Residuals = residuals_1se
+)
+
+library(ggplot2)
+
+ggplot(residual_df_1se, aes(x = Predicted, y = Residuals)) +
+  
+  # Scatter points
+  geom_point(
+    color = "steelblue4",
+    fill = "skyblue",
+    shape = 21,
+    size = 2.5,
+    alpha = 0.75
+  ) +
+  
+  # Horizontal reference line
+  geom_hline(
+    yintercept = 0,
+    color = "firebrick",
+    linetype = "dashed",
+    linewidth = 0.8
+  ) +
+  
+  labs(
+    title = "Residual Plot: LASSO Lambda.1SE Model",
+    x = "Predicted Values",
+    y = "Residuals (Observed - Predicted)"
+  ) +
+  
+  theme_minimal(base_size = 14) +
+  
+  theme(
+    # Center title
+    plot.title = element_text(
+      hjust = 0.5,
+      face = "bold",
+      size = 18
+    ),
+    
+    # Axis titles
+    axis.title.x = element_text(
+      face = "bold",
+      size = 14,
+      margin = margin(t = 12)   # Moves x-axis title downward
+    ),
+    
+    axis.title.y = element_text(
+      face = "bold",
+      size = 14,
+      margin = margin(r = 12)
+    ),
+    
+    # Axis text
+    axis.text = element_text(size = 12),
+    
+    # Grid appearance
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey85")
+  )
+```
+
+Residual diagnostics for lambda.1SE model: The figure above presents the residual plot for the LASSO regression model selected using the one-standard-error criterion. Residuals are plotted as the difference between observed and predicted Total SPAI scores against the predicted values. The residuals are distributed approximately symmetrically around zero across the full range of predicted values, indicating that the model does not exhibit substantial systematic over- or under-prediction. No pronounced linear or nonlinear pattern is evident, suggesting that the assumption of an appropriate functional relationship between the predictors and outcome is reasonably satisfied.
+
+The spread of the residuals remains relatively consistent across the range of predicted values, providing little evidence of severe heteroscedasticity. The overall dispersion is relatively uniform and does not indicate a meaningful violation of the constant variance assumption. Most residuals fall within approximately ±10 points of zero, consistent with the model's reported prediction error (RMSE ≈ 5.16 and MAE ≈ 3.99).
+
+A small number of observations exhibit relatively large residuals, including several positive residuals exceeding 15 points and one observation approaching 25 points. These cases represent observations for which the model substantially underestimated the observed Total SPAI score. Similarly, a few negative residuals below −10 indicate instances where the model overestimated the outcome. However, these observations appear isolated rather than systematic and do not suggest a broader model deficiency.
+
+Overall, the residual plot supports the adequacy of the lambda.1SE LASSO model. The absence of discernible structure in the residuals, combined with the relatively constant spread around zero, indicates that the model provides unbiased predictions with no evidence of major violations of regression assumptions. While several moderate outliers remain, they are few in number and do not materially detract from the overall fit of the model.
+
 Below are the variables that were selected in the optimal model with the
 most influential at the top and displayed in decreasing order as the
 influence decreases. :
