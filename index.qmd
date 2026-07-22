@@ -6,7 +6,7 @@ format:
   html:
     code-fold: true
 course: Capstone Projects in Data Science
-bibliography: references.bib # file contains bibtex for references
+#bibliography: references.bib # file contains bibtex for references
 #always_allow_html: true # this allows to get PDF with HTML features
 self-contained: true
 execute: 
@@ -23,18 +23,23 @@ In today's ever-growing digital era, what began as a tool of
 convenience, smartphones and devices have become a vital piece of our
 daily life. While these items enable instant communication across the
 globe, growing usage has evolved into an increasing psychological and
-social crisis: smartphone addiction. Characterized by the compulsive
-need to check notifications and apps, withdrawal symptoms, and severe
+social crisis: smartphone addiction, known formally in literature as
+Problematic Smartphone Use (PSU). Characterized by the compulsive need
+to check notifications and apps, withdrawal symptoms, and severe
 interference with daily life, smartphone dependency shows an increasing
 link to rising rates of anxiety, sleep deprivation, and diminished
-academic performance among young adults [@lin2014]. Identifying the
-precise behavioral, social, and psychological drivers of this addiction
-is critical for developing effective interventions. Available data
-tracking screen time, app usage, and psychological metrics frequently
-contain dozens of interconnected variables. Traditional linear
-regression models struggle under this weight, frequently from
-overfitting and multicollinearity, which obscures the true narrative
-hidden within the data [@james2013].
+academic performance among young adults [@lin2014]. A comprehensive
+systematic review of 293 global studies establishes that problematic
+smartphone usage is heavily driven by poor impulse control and negative
+emotional health, finding that young, female populations are
+statistically the most vulnerable to developing these dependencies
+[@busch2021]. Identifying the precise behavioral, social, and
+psychological drivers of this addiction is critical for developing
+effective interventions. Available data tracking screen time, app usage,
+and psychological metrics frequently contain dozens of interconnected
+variables. Traditional linear regression models struggle under this
+weight, frequently from overfitting and multicollinearity, which
+obscures the true narrative hidden within the data [@james2013].
 
 In this project, we will explore the Least Absolute Shrinkage and
 Selection Operator (LASSO) method, commonly known as LASSO regression,
@@ -67,13 +72,19 @@ addiction dataset to break down which specific behaviors and
 demographics truly drive the dependencies. Smartphone datasets are
 particularly noisy, with variables like social media screen time, daily
 notification counts, and self-reported anxiety scores often overlapping
-and distorting traditional models. By implementing LASSO, we can
-mathematically weed out any statistical noise, isolating the leading
-factors [@james2013]. Ideally, this approach will aid us in answering a
-crucial question: with the countless digital metrics tracked today,
-which factors truly lead to smartphone addictions? Our findings aim to
-provide a streamlined, data-driven framework that peers and clinicians
-alike can use to understand and combat digital dependency.
+and distorting traditional models. Furthermore, while extensive
+behavioral literature identifies broad cognitive antecedents to PSU—such
+as using devices as a coping mechanism for negative affect—it frequently
+relies on highly collinear metrics that fail to rank which factors are
+truly critical. [@busch2021]
+
+By implementing LASSO, we can mathematically weed out any statistical
+noise, isolating the leading factors [@james2013]. Ideally, this
+approach will aid us in answering a crucial question: with the countless
+digital metrics tracked today, which factors truly lead to smartphone
+addictions? Our findings aim to provide a streamlined, data-driven
+framework that peers and clinicians alike can use to understand and
+combat digital dependency.
 
 | Abbreviation | Scale                                             |
 |--------------|---------------------------------------------------|
@@ -1777,6 +1788,150 @@ five question survey, that the five questions that you should ask are:
 
 These questions are the strongest indicator of cell phone addiction.
 
+#### LASSO regression for SPAI total
+
+We fit plain LASSO (`glmnet`, `alpha = 1`, Gaussian family) and group
+LASSO (`grpreg`, scales as groups) on the training set with 10-fold
+cross-validation to select $\lambda$. Test-set performance is reported
+with $R^2$ and RMSE (Equation 3). Following our Methods section, we
+emphasize **plain LASSO at `lambda.1se`** as the recommended model: it
+achieves strong predictive accuracy while retaining far fewer predictors
+than group LASSO at comparable $R^2$ [@james2013; @huang2024].
+
+```{r modeling-setup, warning=FALSE, message=FALSE}
+library(glmnet)
+library(grpreg)
+library(caret)
+
+RANDOM_SEED <- 123
+set.seed(RANDOM_SEED)
+
+assign_group <- function(nm) {
+  if (grepl("^gender", nm)) return("gender")
+  if (grepl("^grade", nm)) return("grade")
+  if (nm == "age") return("age")
+  if (grepl("^NMP_", nm)) return("NMP")
+  if (grepl("^SAPS_", nm)) return("SAPS")
+  if (grepl("^SPAI_", nm)) return("SPAI")
+  if (grepl("^MPAS_", nm)) return("MPAS")
+  if (grepl("^MPATS", nm)) return("MPATS")
+  if (grepl("^SAS_CA", nm)) return("SAS_CA")
+  if (grepl("^SAS_C", nm)) return("SAS_C")
+  "other"
+}
+
+make_reg_mm <- function(dat) {
+  spai_items <- paste0("SPAI_", 1:20)
+  d <- dat[, !names(dat) %in% c(spai_items, "SPAI_total"), drop = FALSE]
+  d$SPAI_total <- dat$SPAI_total
+  x <- model.matrix(SPAI_total ~ ., data = d)[, -1]
+  list(
+    x = x,
+    y = d$SPAI_total,
+    group = as.numeric(factor(sapply(colnames(x), assign_group)))
+  )
+}
+
+plain_lasso_vars <- function(cv_fit, lambda_label, cols) {
+  raw_coef <- coef(cv_fit, s = lambda_label)
+  mat <- as.matrix(raw_coef)
+  vars <- rownames(mat)[mat[, 1] != 0]
+  intersect(setdiff(vars, "(Intercept)"), cols)
+}
+
+group_lasso_vars <- function(cv_fit, lambda_val, cols) {
+  coefs <- coef(cv_fit, lambda = lambda_val)
+  intersect(names(coefs)[coefs != 0 & names(coefs) != "(Intercept)"], cols)
+}
+
+reg_metrics <- function(y_true, y_pred) {
+  ss_res <- sum((y_true - y_pred)^2)
+  ss_tot <- sum((y_true - mean(y_true))^2)
+  list(
+    R2 = 1 - ss_res / ss_tot,
+    RMSE = sqrt(mean((y_true - y_pred)^2))
+  )
+}
+
+mod_dat <- dat
+mod_dat$gender <- as.factor(mod_dat$gender)
+mod_dat$grade <- as.factor(mod_dat$grade)
+mod_dat$SPAI_12 <- as.factor(mod_dat$SPAI_12)
+
+train_index <- createDataPartition(mod_dat$SPAI_12, p = 0.80, list = FALSE)
+mm_reg <- make_reg_mm(mod_dat)
+xtr <- mm_reg$x[train_index, , drop = FALSE]
+xte <- mm_reg$x[-train_index, , drop = FALSE]
+ytr <- mm_reg$y[train_index]
+yte <- mm_reg$y[-train_index]
+
+cv_plain <- cv.glmnet(xtr, ytr, alpha = 1, family = "gaussian", nfolds = 10)
+pred_plain <- as.numeric(predict(cv_plain, xte, s = "lambda.1se"))
+met_plain <- reg_metrics(yte, pred_plain)
+sel_plain <- plain_lasso_vars(cv_plain, "lambda.1se", colnames(mm_reg$x))
+
+cv_grp <- cv.grpreg(xtr, ytr, mm_reg$group, family = "gaussian", nfolds = 10)
+lam_grp <- cv_grp$lambda.min
+pred_grp <- as.numeric(predict(cv_grp, xte, lambda = lam_grp))
+met_grp <- reg_metrics(yte, pred_grp)
+sel_grp <- group_lasso_vars(cv_grp, lam_grp, colnames(mm_reg$x))
+
+gauss_results <- data.frame(
+  Model = c("Plain LASSO | lambda.1se", "Group LASSO | lambda.min"),
+  R2 = round(c(met_plain$R2, met_grp$R2), 3),
+  RMSE = round(c(met_plain$RMSE, met_grp$RMSE), 2),
+  N_selected = c(length(sel_plain), length(sel_grp))
+)
+
+scale_counts <- sel_plain %>%
+  sapply(assign_group) %>%
+  table() %>%
+  as.data.frame(stringsAsFactors = FALSE)
+names(scale_counts) <- c("Scale", "N_items")
+```
+
+On the held-out test set ($n =$
+`r nrow(mm_reg$x) - length(train_index)`), plain LASSO at `lambda.1se`
+achieved $R^2 =$ `r gauss_results$R2[1]` and RMSE =
+`r gauss_results$RMSE[1]`, selecting `r gauss_results$N_selected[1]`
+predictors. Group LASSO at `lambda.min` reached a similar $R^2 =$
+`r gauss_results$R2[2]` but retained `r gauss_results$N_selected[2]`
+predictors—substantially more complexity for little additional
+explanatory gain. In practical terms, the non-SPAI scales explain
+roughly three-quarters of the variation in SPAI total severity on
+respondents the model had not seen during training.
+
+```{r tbl-gaussian, tbl.cap="Gaussian LASSO models predicting SPAI total from non-SPAI items (test set)."}
+kable(gauss_results, align = c("l", "r", "r", "r"),
+      col.names = c("Model", "R²", "RMSE", "Predictors selected"))
+```
+
+Item-level plain LASSO selection was concentrated in **SAPS** (addiction
+proneness) and **SAS** (cognitive and behavioral addiction symptoms).
+Nomophobia (NMP) contributed few or no items once these stronger scales
+were penalized into the model, consistent with the weaker zero-order
+correlation observed in exploration. Demographics played a minor role
+relative to the addiction instrument items.
+
+```{r fig-selected-scales, fig.cap="Number of item-level predictors selected by plain LASSO (lambda.1se), grouped by instrument."}
+ggplot(scale_counts, aes(x = reorder(Scale, N_items), y = N_items, fill = Scale)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(x = NULL, y = "Selected items",
+       title = "Plain LASSO Selected Predictors by Scale") +
+  theme_minimal(base_size = 12)
+
+
+
+```
+
+These results align with the exploratory correlation structure: SAS and
+SAPS track SPAI total most closely, and LASSO uses that shared variance
+efficiently while zeroing out redundant nomophobia items. The high test
+$R^2$ should be interpreted as **convergent validity** among overlapping
+addiction measures rather than evidence of causal effects [@gao2024;
+@lin2014].
+
 ## Conclusion
 
 This study applied iterative LASSO variable reduction to a Chinese
@@ -1820,10 +1975,10 @@ full multi-instrument battery, subject to prospective validation.
 
 Future work should assess robustness across alternative train–test
 splits and random seeds, validate the short-form item sets in
-independent samples, pursue group LASSO more systematically—including
-alternative scale-defined groupings and penalty schedules relative to
-the iterative plain LASSO path—and extend the analysis beyond the
-Chinese young-adult cohort in order to distinguish context-specific from
-more universal predictors of smartphone addiction severity.
+independent samples, revisit the imbalanced categorical outcome SPAI
+item 12 with methods suited to class imbalance, and extend the analysis
+beyond the Chinese young-adult cohort in order to distinguish
+context-specific from more universal predictors of smartphone addiction
+severity.
 
 ## References
